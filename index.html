@@ -176,6 +176,15 @@
   .set-row.done { background: var(--good-soft); }
   .set-row.done .check { background: var(--good); border-color: var(--good); color: var(--good-soft); }
   .set-row.done input { background: transparent; }
+  .set-row.done.under { background: var(--pr-soft); }
+  .set-row.done.under .check { background: var(--pr); border-color: var(--pr); color: var(--pr-soft); }
+
+  .counter {
+    font-size: 11px; font-weight: 700; color: var(--ink-dim);
+    background: var(--surface-2); padding: 3px 8px; border-radius: 999px;
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .counter.full { background: var(--good-soft); color: var(--good); }
 
   .note-wrap { padding: 2px 16px 12px; }
   .note-input {
@@ -520,9 +529,11 @@
       if (!dr.sets) dr.sets = [];
       var sugg = suggestedWeight(ex);
 
+      var doneCount = dr.sets.filter(function (s) { return s && s.done; }).length;
       html += '<section class="card" data-ex="' + escapeAttr(ex.n) + '">';
       html += '<div class="card-head"><h2>' + escapeHtml(ex.n) + '</h2><span class="scheme num">' + escapeHtml(ex.label) + '</span></div>';
-      html += '<div class="rest-chip">Descanso ' + ex.rest + 's</div>';
+      html += '<div class="rest-chip">Descanso ' + ex.rest + 's &nbsp;·&nbsp; <span class="counter' +
+        (doneCount === ex.sets ? ' full' : '') + '">' + doneCount + '/' + ex.sets + ' series</span></div>';
 
       if (sugg) {
         html += '<div class="suggest">' +
@@ -535,12 +546,13 @@
       for (var i = 0; i < ex.sets; i++) {
         var row = dr.sets[i] || {};
         var placeholderW = sugg ? (sugg.bump ? sugg.weight + 5 : sugg.weight) : "";
-        html += '<div class="set-row ' + (row.done ? "done" : "") + '" data-set="' + i + '">';
+        var rowUnder = row.done && ex.target != null && row.reps != null && row.reps < ex.target;
+        html += '<div class="set-row ' + (row.done ? "done" : "") + (rowUnder ? " under" : "") + '" data-set="' + i + '">';
         html += '<div class="label">S' + (i + 1) + '</div>';
         html += '<input class="w-input" inputmode="decimal" type="number" step="2.5" placeholder="' +
           (placeholderW !== "" ? placeholderW : "lb") + '" value="' + (row.weight != null ? row.weight : "") + '">';
-        html += '<input class="r-input" inputmode="numeric" type="number" placeholder="reps" value="' +
-          (row.reps != null ? row.reps : "") + '">';
+        html += '<input class="r-input" inputmode="numeric" type="number" placeholder="' +
+          (ex.target != null ? ex.target : "reps") + '" value="' + (row.reps != null ? row.reps : "") + '">';
         html += '<button class="check" aria-label="Marcar serie completa">' + (row.done ? "✓" : "") + '</button>';
         html += '</div>';
       }
@@ -564,6 +576,18 @@
     wireTrainEvents(day);
 
     function dr_cardio() { return !!draft.__cardio_ && draft.__cardio_[day.id]; }
+  }
+
+  function updateCounter(card, day, exName) {
+    var ex = null;
+    day.exercises.forEach(function (e) { if (e.n === exName) ex = e; });
+    if (!ex) return;
+    var dr = draftFor(exName);
+    var doneCount = (dr.sets || []).filter(function (s) { return s && s.done; }).length;
+    var el = card.querySelector(".counter");
+    if (!el) return;
+    el.textContent = doneCount + "/" + ex.sets + " series";
+    el.classList.toggle("full", doneCount === ex.sets);
   }
 
   function wireTrainEvents(day) {
@@ -596,23 +620,42 @@
           save(DRAFT_KEY, draft);
         });
         rInput.addEventListener("input", function () {
-          ensure().reps = rInput.value === "" ? null : parseInt(rInput.value, 10);
+          var s = ensure();
+          s.reps = rInput.value === "" ? null : parseInt(rInput.value, 10);
           save(DRAFT_KEY, draft);
+          if (s.done) {
+            var ex = null;
+            day.exercises.forEach(function (e) { if (e.n === exName) ex = e; });
+            var under = ex && ex.target != null && s.reps != null && s.reps < ex.target;
+            row.classList.toggle("under", !!under);
+          }
         });
         check.addEventListener("click", function () {
           var s = ensure();
-          s.done = !s.done;
-          save(DRAFT_KEY, draft);
           var ex = null;
           day.exercises.forEach(function (e) { if (e.n === exName) ex = e; });
+          s.done = !s.done;
+          if (s.done) {
+            // Un toque sin escribir: asume el objetivo de la rutina (reps) y
+            // el peso sugerido, si estaban vacios — evita re-escribir "5"
+            // cinco veces en un 5x5 cuando se cumple el plan tal cual.
+            if (s.reps == null && ex && ex.target != null) { s.reps = ex.target; rInput.value = ex.target; }
+            if (s.weight == null && wInput.placeholder && wInput.placeholder !== "lb") {
+              s.weight = parseFloat(wInput.placeholder); wInput.value = wInput.placeholder;
+            }
+          }
+          save(DRAFT_KEY, draft);
+          var under = s.done && ex && ex.target != null && s.reps != null && s.reps < ex.target;
           if (s.done) {
             row.classList.add("done");
+            row.classList.toggle("under", !!under);
             check.textContent = "✓";
             if (ex) startTimer(ex.rest, exName);
           } else {
-            row.classList.remove("done");
+            row.classList.remove("done", "under");
             check.textContent = "";
           }
+          updateCounter(card, day, exName);
         });
       });
     });

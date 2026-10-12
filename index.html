@@ -300,8 +300,35 @@
     font-size: 12px; color: var(--ink-dim); margin-bottom: 8px;
     font-variant-numeric: tabular-nums;
   }
-  .prog-item canvas { display: block; width: 100%; height: 44px; }
-  .prog-empty { text-align: center; color: var(--ink-dim); font-size: 13px; padding: 40px 20px; }
+  /* Dashboard y Análisis de Métricas */
+  .dash-summary {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;
+  }
+  .stat-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; box-shadow: var(--shadow);
+  }
+  .stat-box .title { font-size: 11px; font-weight: 700; color: var(--ink-dim); text-transform: uppercase; letter-spacing: .05em; }
+  .stat-box .val { font-size: 22px; font-weight: 800; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .stat-box .sub { font-size: 11px; color: var(--ink-dim); margin-top: 2px; }
+
+  .coach-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 6px;
+  }
+  .coach-card.good-border { border-left: 4px solid var(--good); }
+  .coach-card.warn-border { border-left: 4px solid var(--pr); }
+  .coach-card.bad-border { border-left: 4px solid var(--bad); }
+  .coach-card h4 { margin: 0 0 6px; font-size: 14.5px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; }
+  .coach-card p { margin: 0; font-size: 12.5px; color: var(--ink); line-height: 1.45; }
+  .coach-card .tip { font-size: 11.5px; color: var(--ink-dim); margin-top: 6px; font-style: italic; }
+
+  .badge-tag {
+    font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; text-transform: uppercase;
+  }
+  .badge-good { background: var(--good-soft); color: var(--good); }
+  .badge-warn { background: var(--pr-soft); color: var(--pr); }
+  .badge-bad { background: rgba(181,57,31,.12); color: var(--bad); }
 
   .section-label {
     font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
@@ -737,10 +764,129 @@
     return out;
   }
 
+  function analyzePerformance() {
+    var strengths = [];
+    var weaknesses = [];
+    var totalSessions = 0;
+    var allEx = allExercises();
+
+    allEx.forEach(function (ex) {
+      var h = log[ex.n];
+      if (!h || !h.sessions || !h.sessions.length) return;
+      totalSessions += h.sessions.length;
+
+      var s = h.sessions;
+      var first = s[0];
+      var last = s[s.length - 1];
+
+      var firstMax = first.sets.reduce(function (m, x) { return Math.max(m, x.weight || 0); }, 0);
+      var lastMax = last.sets.reduce(function (m, x) { return Math.max(m, x.weight || 0); }, 0);
+      var allMax = s.map(function (ses) { return ses.sets.reduce(function (m, x) { return Math.max(m, x.weight || 0); }, 0); });
+      var peakMax = Math.max.apply(null, allMax);
+
+      // Si ha progresado en peso o completado series sólidas
+      if (s.length >= 2 && lastMax > firstMax) {
+        var diff = lastMax - firstMax;
+        strengths.push({
+          name: ex.n,
+          text: "Ganancia de +" + diff + " lb (de " + firstMax + " a " + lastMax + " lb). Progresión sólida de sobrecarga.",
+          tag: "Mejora",
+          type: "good"
+        });
+      } else if (s.length >= 3 && peakMax > 0 && lastMax === peakMax) {
+        strengths.push({
+          name: ex.n,
+          text: "En tu marca máxima histórica (" + peakMax + " lb). Listo para buscar salto de carga o reps.",
+          tag: "Poder pico",
+          type: "good"
+        });
+      }
+
+      // Detectar debilidades o estancamientos (si el último entreno bajó de peso o si hay notas de fatiga)
+      if (s.length >= 2 && lastMax < peakMax && peakMax > 0) {
+        var drop = peakMax - lastMax;
+        weaknesses.push({
+          name: ex.n,
+          text: "Bajó -" + drop + " lb respecto a tu récord (" + peakMax + " lb). Posible fatiga acumulada o falta de descanso.",
+          tip: "Recomendación: asegurar 48h de recuperación y descanso de 90s a 120s entre series.",
+          tag: "Retroceso",
+          type: "warn"
+        });
+      } else if (s.length >= 3 && lastMax === firstMax && lastMax > 0) {
+        weaknesses.push({
+          name: ex.n,
+          text: "Mismo peso (" + lastMax + " lb) en " + s.length + " sesiones consecutivas.",
+          tip: "Recomendación: intenta sumar 1 sola repetición extra antes de subir peso (sobrecarga progresiva).",
+          tag: "Estancado",
+          type: "warn"
+        });
+      }
+    });
+
+    // Detectar si no hay registros de piernas o peso muerto
+    var squadLog = log["Sentadilla libre"] || log["Prensa"];
+    if (!squadLog || !squadLog.sessions || squadLog.sessions.length === 0) {
+      weaknesses.push({
+        name: "Tren Inferior (Piernas y Salto)",
+        text: "Pocas sesiones registradas en piernas en comparación con empuje y tracción.",
+        tip: "Clave para tus deportes: las piernas generan el salto vertical en basket y el sprint en softbol.",
+        tag: "Prioridad",
+        type: "bad"
+      });
+    }
+
+    return {
+      strengths: strengths,
+      weaknesses: weaknesses,
+      totalSessions: totalSessions
+    };
+  }
+
   function renderProgress() {
-    var html = '<header class="top"><div class="kicker">Historial</div><h1>TU <span>PROGRESO</span></h1></header>';
+    var html = '<header class="top"><div class="kicker">Análisis Atlético</div><h1>TU <span>DASHBOARD</span></h1></header>';
     html += '<main>';
+
+    var analysis = analyzePerformance();
     var exs = allExercises();
+    var trackedCount = exs.filter(function (e) { return log[e.n] && log[e.n].sessions && log[e.n].sessions.length; }).length;
+
+    // Resumen en cajas
+    html += '<div class="dash-summary">';
+    html += '<div class="stat-box"><div class="title">Ejercicios Activos</div><div class="val">' + trackedCount + '</div><div class="sub">con métricas guardadas</div></div>';
+    html += '<div class="stat-box"><div class="title">Rendimiento</div><div class="val" style="color:var(--good);">' + (analysis.strengths.length > 0 ? "En Alza 🚀" : "Base") + '</div><div class="sub">' + analysis.strengths.length + ' puntos fuertes</div></div>';
+    html += '</div>';
+
+    // Sección de Fortalezas / Mejoras
+    html += '<div class="section-label">🏆 Tus Mayores Mejoras</div>';
+    if (analysis.strengths.length) {
+      analysis.strengths.forEach(function (st) {
+        html += '<div class="coach-card good-border">' +
+          '<h4>' + escapeHtml(st.name) + ' <span class="badge-tag badge-good">' + st.tag + '</span></h4>' +
+          '<p>' + escapeHtml(st.text) + '</p>' +
+          '</div>';
+      });
+    } else {
+      html += '<div class="coach-card"><p>Registra al menos 2 sesiones de un ejercicio para ver tus ganancias calculadas automáticamente.</p></div>';
+    }
+
+    // Sección de Debilidades / Puntos a Corregir
+    html += '<div class="section-label">⚠️ Puntos Débiles y Ajustes</div>';
+    if (analysis.weaknesses.length) {
+      analysis.weaknesses.forEach(function (wk) {
+        var borderCls = wk.type === "bad" ? "bad-border" : "warn-border";
+        var badgeCls = wk.type === "bad" ? "badge-bad" : "badge-warn";
+        html += '<div class="coach-card ' + borderCls + '">' +
+          '<h4>' + escapeHtml(wk.name) + ' <span class="badge-tag ' + badgeCls + '">' + wk.tag + '</span></h4>' +
+          '<p>' + escapeHtml(wk.text) + '</p>' +
+          (wk.tip ? '<div class="tip">💡 ' + escapeHtml(wk.tip) + '</div>' : '') +
+          '</div>';
+      });
+    } else {
+      html += '<div class="coach-card good-border"><p>¡Balance excelente! No hay signos de estancamiento o desbalance muscular detectados.</p></div>';
+    }
+
+    // Historial detallado con curvas
+    html += '<div class="section-label" style="margin-top:10px;">📈 Curvas de Progresión</div>';
     var any = false;
     exs.forEach(function (ex) {
       var h = log[ex.n];
@@ -752,11 +898,15 @@
       });
       var best = Math.max.apply(null, maxes);
       var last = sessions[sessions.length - 1];
-      html += '<div class="prog-item"><h3>' + escapeHtml(ex.n) + '</h3>' +
-        '<div class="best num">Mejor: ' + best + ' lb &nbsp;·&nbsp; Última: ' + last.date + '</div>' +
+      html += '<div class="prog-item" style="margin-bottom:8px;"><h3>' + escapeHtml(ex.n) + '</h3>' +
+        '<div class="best num">Récord: ' + best + ' lb &nbsp;·&nbsp; Última: ' + last.date + ' (' + (sessions[sessions.length-1].sets[0].weight || 0) + ' lb)</div>' +
         '<canvas data-values="' + maxes.join(",") + '" width="300" height="44"></canvas></div>';
     });
-    if (!any) html += '<div class="prog-empty">Aún no hay sesiones guardadas.<br>Registra tu primer entrenamiento en <b>Entrenar</b>.</div>';
+
+    if (!any) {
+      html += '<div class="prog-empty">Aún no hay sesiones guardadas.<br>Entra a <b>Entrenar</b> o importa tus datos para ver el análisis.</div>';
+    }
+
     html += '</main>';
     app.innerHTML = html;
     app.querySelectorAll("canvas[data-values]").forEach(drawSpark);

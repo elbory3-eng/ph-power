@@ -1,8 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
 <title>PH Power — Registro de Entrenamiento</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PH Power">
+<meta name="application-name" content="PH Power">
 <meta name="theme-color" content="#15140f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
 <style>
   :root {
     --bg: #f3efe4;
@@ -53,7 +64,17 @@
   }
 
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    overscroll-behavior-y: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, textarea {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
   body {
     background: var(--bg);
     color: var(--ink);
@@ -64,12 +85,12 @@
     display: flex;
     justify-content: center;
   }
-  #app { width: 100%; max-width: 560px; padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+  #app { width: 100%; max-width: 560px; padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 
   .num, input[type="number"] { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
 
   header.top {
-    padding: 22px 20px 14px;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px;
     display: flex; flex-direction: column; gap: 2px;
   }
   header.top .kicker {
@@ -159,15 +180,15 @@
   }
   .set-row .label { font-size: 12px; font-weight: 700; color: var(--ink-dim); }
   .set-row input {
-    width: 100%; font: inherit; font-size: 15px; font-weight: 700;
+    width: 100%; font: inherit; font-size: 16px; font-weight: 700;
     color: var(--ink); background: var(--surface-2);
     border: 1.5px solid transparent; border-radius: 9px;
     padding: 9px 8px; text-align: center;
   }
-  .set-row input::placeholder { color: var(--ink-dim); font-weight: 500; opacity: .6; }
+  .set-row input::placeholder { color: var(--ink-dim); font-weight: 500; opacity: .6; font-size: 14px; }
   .set-row input:focus-visible { outline: none; border-color: var(--accent); }
   .set-row .check {
-    width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--border);
+    width: 44px; height: 44px; border-radius: 10px; border: 1.5px solid var(--border);
     background: var(--surface-2); color: var(--ink-dim);
     font-size: 17px; font-weight: 800; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
@@ -179,6 +200,12 @@
   .set-row.done.under { background: var(--pr-soft); }
   .set-row.done.under .check { background: var(--pr); border-color: var(--pr); color: var(--pr-soft); }
 
+  /* Feedback táctil nativo en móvil */
+  button:active, .check:active, .btn-outline:active {
+    transform: scale(0.96);
+    transition: transform 0.08s ease;
+  }
+
   .counter {
     font-size: 11px; font-weight: 700; color: var(--ink-dim);
     background: var(--surface-2); padding: 3px 8px; border-radius: 999px;
@@ -188,9 +215,9 @@
 
   .note-wrap { padding: 2px 16px 12px; }
   .note-input {
-    width: 100%; font: inherit; font-size: 12.5px; color: var(--ink-dim);
+    width: 100%; font: inherit; font-size: 14px; color: var(--ink-dim);
     background: var(--surface-2); border: 1px solid transparent; border-radius: 9px;
-    padding: 8px 10px; resize: none; min-height: 34px; line-height: 1.35;
+    padding: 8px 10px; resize: none; min-height: 38px; line-height: 1.35;
   }
   .note-input:focus-visible { outline: none; border-color: var(--accent); color: var(--ink); }
   .note-input::placeholder { color: var(--ink-dim); opacity: .6; }
@@ -201,16 +228,17 @@
   .cardio-row p { margin: 0; font-size: 13.5px; color: var(--ink-dim); }
   .cardio-row button {
     flex: none; font: inherit; font-weight: 700; font-size: 13px;
-    padding: 9px 14px; border-radius: 9px; border: 1.5px solid var(--border);
+    padding: 10px 16px; min-height: 44px; border-radius: 9px; border: 1.5px solid var(--border);
     background: var(--surface-2); color: var(--ink); cursor: pointer;
   }
   .cardio-row button.done { background: var(--good-soft); color: var(--good); border-color: var(--good); }
 
   .finish {
-    margin: 6px 4px 0;
+    margin: 8px 4px 0;
+    min-height: 52px;
     padding: 15px; border-radius: var(--radius); border: none;
     background: var(--accent); color: var(--accent-ink);
-    font: inherit; font-weight: 800; font-size: 15px; letter-spacing: .01em;
+    font: inherit; font-weight: 800; font-size: 16px; letter-spacing: .01em;
     cursor: pointer;
   }
   .finish:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -218,7 +246,7 @@
 
   /* Rest timer sheet */
   #timer {
-    position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom));
+    position: fixed; left: 0; right: 0; bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     display: none; justify-content: center; z-index: 20;
     padding: 0 16px;
   }
@@ -242,16 +270,19 @@
   }
   @keyframes pulse { 50% { opacity: .55; } }
 
-  /* Bottom nav */
+  /* Bottom nav móvil ergonómica */
   nav.bottom {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
     display: flex; background: var(--surface); border-top: 1px solid var(--border);
-    padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
+    padding: 6px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   nav.bottom button {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 48px;
     font: inherit; background: none; border: none; cursor: pointer;
-    padding: 6px 4px; color: var(--ink-dim); font-size: 11px; font-weight: 700;
+    padding: 4px; color: var(--ink-dim); font-size: 11px; font-weight: 700;
   }
   nav.bottom button .ico { font-size: 19px; }
   nav.bottom button.active { color: var(--accent); }
@@ -346,49 +377,39 @@
   "use strict";
 
   var DEFAULT_ROUTINE = [
-    { id: "d1", name: "Pecho + Hombro + Tríceps", short: "Día 1", optional: false, cardio: null,
+    { id: "d1", name: "Potencia, Empuje y Salto (Béisbol / Basket)", short: "Día 1", optional: false, cardio: null,
       exercises: [
-        { n: "Press de banca con barra", sets: 5, label: "5×5", target: 5, rest: 120 },
-        { n: "Press inclinado con mancuernas", sets: 4, label: "4×8-10", target: 10, rest: 90 },
-        { n: "Fondos", sets: 4, label: "4×8-12", target: 12, rest: 90 },
-        { n: "Press militar", sets: 4, label: "4×6-8", target: 8, rest: 120 },
-        { n: "Elevaciones laterales", sets: 4, label: "4×15", target: 15, rest: 60 },
-        { n: "Extensión de tríceps en polea", sets: 3, label: "3×12", target: 12, rest: 60 },
-        { n: "Abdominales", sets: 3, label: "3 series", target: null, rest: 45 }
+        { n: "Press de banca con barra", sets: 5, label: "5×5 explosivo", target: 5, rest: 120 },
+        { n: "Sentadilla con salto (o con mancuernas)", sets: 4, label: "4×5 salto", target: 5, rest: 90 },
+        { n: "Press militar", sets: 4, label: "4×6", target: 6, rest: 120 },
+        { n: "Press inclinado con mancuernas", sets: 3, label: "3×8", target: 8, rest: 90 },
+        { n: "Rotación Rusa / Core rotacional", sets: 3, label: "3×15 por lado", target: 15, rest: 45 },
+        { n: "Face Pull / Manguito rotador", sets: 3, label: "3×15", target: 15, rest: 45 },
+        { n: "Extensión de tríceps en polea", sets: 3, label: "3×10", target: 10, rest: 60 }
       ]},
-    { id: "d2", name: "Espalda + Bíceps", short: "Día 2", optional: false, cardio: "Caminata inclinada — 10 min",
+    { id: "d2", name: "Tracción, Cadena Posterior y Bateo", short: "Día 2", optional: false, cardio: "Intervalos alta intensidad — 10 min",
       exercises: [
         { n: "Peso muerto", sets: 4, label: "4×5", target: 5, rest: 150 },
         { n: "Dominadas", sets: 4, label: "4 al fallo", target: null, rest: 90 },
-        { n: "Remo con barra", sets: 4, label: "4×8", target: 8, rest: 120 },
-        { n: "Jalón al pecho", sets: 3, label: "3×10", target: 10, rest: 75 },
-        { n: "Remo sentado", sets: 3, label: "3×12", target: 12, rest: 75 },
-        { n: "Curl con barra", sets: 4, label: "4×8", target: 8, rest: 60 },
-        { n: "Curl martillo", sets: 3, label: "3×12", target: 12, rest: 60 }
+        { n: "Remo con barra", sets: 4, label: "4×6-8", target: 8, rest: 120 },
+        { n: "Jalón al pecho", sets: 3, label: "3×8-10", target: 10, rest: 75 },
+        { n: "Landmine / Woodchopper (abajo hacia arriba)", sets: 3, label: "3×10 por lado", target: 10, rest: 60 },
+        { n: "Curl martillo", sets: 3, label: "3×10", target: 10, rest: 60 },
+        { n: "Curl con barra", sets: 3, label: "3×8", target: 8, rest: 60 }
       ]},
-    { id: "d3", name: "Piernas", short: "Día 3", optional: false, cardio: null,
+    { id: "d3", name: "Fuerza Unilateral, Agilidad y Resistencia", short: "Día 3", optional: false, cardio: null,
       exercises: [
         { n: "Sentadilla libre", sets: 5, label: "5×5", target: 5, rest: 150 },
-        { n: "Prensa", sets: 4, label: "4×10", target: 10, rest: 120 },
+        { n: "Zancadas / Desplantes caminando", sets: 3, label: "3×10 por pierna", target: 10, rest: 90 },
         { n: "Peso muerto rumano", sets: 4, label: "4×8", target: 8, rest: 120 },
-        { n: "Hip Thrust", sets: 4, label: "4×10", target: 10, rest: 90 },
-        { n: "Curl femoral", sets: 3, label: "3×12", target: 12, rest: 60 },
-        { n: "Pantorrillas", sets: 5, label: "5×15", target: 15, rest: 45 },
-        { n: "Crunch con peso", sets: 4, label: "4×15", target: 15, rest: 45 }
-      ]},
-    { id: "d4", name: "Upper Power", short: "Día 4", optional: true, cardio: null,
-      exercises: [
-        { n: "Press banca inclinado", sets: 4, label: "4×6", target: 6, rest: 120 },
-        { n: "Dominadas lastradas o jalón pesado", sets: 4, label: "4×8", target: 8, rest: 120 },
-        { n: "Press militar", sets: 4, label: "4×8", target: 8, rest: 120 },
-        { n: "Remo T", sets: 4, label: "4×10", target: 10, rest: 90 },
-        { n: "Curl barra EZ", sets: 3, label: "3×10", target: 10, rest: 60 },
-        { n: "Fondos", sets: 3, label: "3 al fallo", target: null, rest: 90 },
-        { n: "Face Pull", sets: 3, label: "3×15", target: 15, rest: 45 }
+        { n: "Hip Thrust", sets: 3, label: "3×10", target: 10, rest: 90 },
+        { n: "Prensa", sets: 3, label: "3×10", target: 10, rest: 90 },
+        { n: "Elevaciones laterales", sets: 3, label: "3×15", target: 15, rest: 45 },
+        { n: "Plancha frontal con resistencia", sets: 3, label: "3×45s", target: null, rest: 45 }
       ]}
   ];
 
-  var ROUTINE_KEY = "phpower-routine-v1";
+  var ROUTINE_KEY = "phpower-routine-v2";
   var STORE_KEY = "phpower-log-v1";
   var DRAFT_KEY = "phpower-draft-v1";
   var NOTES_KEY = "phpower-notes-v1";
@@ -800,6 +821,12 @@
     html += '<div class="section-label">Rutina</div>';
     html += '<button class="btn-outline btn-danger" id="restore-btn">Restaurar rutina original</button>';
 
+    html += '<div class="section-label">Aplicación de Celular</div>';
+    html += '<button class="btn-outline" id="install-btn" style="display:' + (deferredInstallPrompt ? 'block' : 'none') + ';">📲 Instalar en pantalla de inicio</button>';
+    html += '<div style="font-size:12px;color:var(--ink-dim);padding:6px 4px;line-height:1.4;">' +
+      '💡 Funciona 100% offline en el gimnasio. En iPhone o Android puedes tocar el menú compartir/opciones de tu navegador y elegir <b>"Agregar a pantalla de inicio"</b> para abrirla sin barra de navegador.' +
+      '</div>';
+
     html += '<div class="section-label">Respaldo</div>';
     html += '<button class="btn-outline" id="export-btn">⬇ Exportar datos (JSON)</button>';
     html += '<label class="file-label"><span class="btn-outline" style="display:block;">⬆ Importar datos (JSON)</span>' +
@@ -850,7 +877,7 @@
     });
 
     document.getElementById("restore-btn").addEventListener("click", function () {
-      if (!confirm("Esto reemplaza tu rutina personalizada por la original de 4 días. ¿Continuar?")) return;
+      if (!confirm("Esto restablece la rutina al plan atlético original de 3 días (Potencia y Deportes). ¿Continuar?")) return;
       routine = JSON.parse(JSON.stringify(DEFAULT_ROUTINE));
       saveRoutine();
       renderSettings();
@@ -894,6 +921,36 @@
         }
       };
       reader.readAsText(file);
+    });
+
+    var installBtn = document.getElementById("install-btn");
+    if (installBtn && deferredInstallPrompt) {
+      installBtn.addEventListener("click", function () {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(function (choice) {
+          if (choice.outcome === "accepted") {
+            toast("¡Instalando app!");
+          }
+          deferredInstallPrompt = null;
+          installBtn.style.display = "none";
+        });
+      });
+    }
+  }
+
+  var deferredInstallPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    var btn = document.getElementById("install-btn");
+    if (btn) btn.style.display = "block";
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js").catch(function (err) {
+        console.warn("ServiceWorker error:", err);
+      });
     });
   }
 

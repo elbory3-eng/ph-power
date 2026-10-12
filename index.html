@@ -377,7 +377,8 @@
   "use strict";
 
   var DEFAULT_ROUTINE = [
-    { id: "d1", name: "Potencia, Empuje y Salto (Béisbol / Basket)", short: "Día 1", optional: false, cardio: null,
+    { id: "d1", name: "Potencia, Empuje y Salto (Béisbol / Basket)", short: "Día 1", optional: false,
+      cardio: "Caminata inclinada o StairMaster — 10-12 min (sin impacto articular)",
       exercises: [
         { n: "Press de banca con barra", sets: 5, label: "5×5 explosivo", target: 5, rest: 120 },
         { n: "Sentadilla con salto (o con mancuernas)", sets: 4, label: "4×5 salto", target: 5, rest: 90 },
@@ -387,7 +388,8 @@
         { n: "Face Pull / Manguito rotador", sets: 3, label: "3×15", target: 15, rest: 45 },
         { n: "Extensión de tríceps en polea", sets: 3, label: "3×10", target: 10, rest: 60 }
       ]},
-    { id: "d2", name: "Tracción, Cadena Posterior y Bateo", short: "Día 2", optional: false, cardio: "Intervalos alta intensidad — 10 min",
+    { id: "d2", name: "Tracción, Cadena Posterior y Bateo", short: "Día 2", optional: false,
+      cardio: "HIIT en Remo o Bici — 10 min (30s sprint / 30s suave)",
       exercises: [
         { n: "Peso muerto", sets: 4, label: "4×5", target: 5, rest: 150 },
         { n: "Dominadas", sets: 4, label: "4 al fallo", target: null, rest: 90 },
@@ -397,7 +399,8 @@
         { n: "Curl martillo", sets: 3, label: "3×10", target: 10, rest: 60 },
         { n: "Curl con barra", sets: 3, label: "3×8", target: 8, rest: 60 }
       ]},
-    { id: "d3", name: "Fuerza Unilateral, Agilidad y Resistencia", short: "Día 3", optional: false, cardio: null,
+    { id: "d3", name: "Fuerza Unilateral, Agilidad y Resistencia", short: "Día 3", optional: false,
+      cardio: "Bici estática suave — 10 min (recuperación activa / piernas libres)",
       exercises: [
         { n: "Sentadilla libre", sets: 5, label: "5×5", target: 5, rest: 150 },
         { n: "Zancadas / Desplantes caminando", sets: 3, label: "3×10 por pierna", target: 10, rest: 90 },
@@ -409,7 +412,7 @@
       ]}
   ];
 
-  var ROUTINE_KEY = "phpower-routine-v2";
+  var ROUTINE_KEY = "phpower-routine-v3";
   var STORE_KEY = "phpower-log-v1";
   var DRAFT_KEY = "phpower-draft-v1";
   var NOTES_KEY = "phpower-notes-v1";

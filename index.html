@@ -373,6 +373,59 @@
   .file-label { display: block; }
   .file-label input[type="file"] { display: none; }
 
+  /* Vista Ruta / Cardio / GPS */
+  .type-chips {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px;
+  }
+  .type-chips button {
+    flex: none; font: inherit; font-size: 13px; font-weight: 700;
+    padding: 8px 13px; border-radius: 999px; border: 1.5px solid var(--border);
+    background: var(--surface-2); color: var(--ink-dim); cursor: pointer;
+  }
+  .type-chips button.active {
+    background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+  }
+  .quick-km {
+    display: flex; gap: 6px; margin-bottom: 10px;
+  }
+  .quick-km button {
+    flex: 1; font: inherit; font-size: 12.5px; font-weight: 800;
+    padding: 8px 4px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--surface-2); color: var(--ink); cursor: pointer;
+  }
+  .route-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;
+  }
+  .route-field label {
+    display: block; font-size: 11px; font-weight: 700; color: var(--ink-dim);
+    text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px;
+  }
+  .route-field input {
+    width: 100%; font: inherit; font-size: 16px; font-weight: 700;
+    color: var(--ink); background: var(--surface-2);
+    border: 1.5px solid transparent; border-radius: 9px; padding: 10px;
+  }
+  .route-field input:focus-visible { outline: none; border-color: var(--accent); }
+  .gps-card {
+    background: var(--surface); border: 1.5px solid var(--accent); border-radius: var(--radius);
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .gps-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center; margin: 10px 0 12px;
+  }
+  .gps-stats .g-val { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .gps-stats .g-lbl { font-size: 10px; font-weight: 700; color: var(--ink-dim); text-transform: uppercase; }
+  .route-item {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .route-item .r-main h4 { margin: 0 0 3px; font-size: 15px; font-weight: 800; }
+  .route-item .r-main .r-meta { font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  .route-item .r-main .r-note { font-size: 12px; color: var(--ink); margin-top: 4px; opacity: .85; }
+  .route-item .r-badge {
+    font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+
   .toast {
     position: fixed; left: 50%; bottom: calc(78px + env(safe-area-inset-bottom));
     transform: translateX(-50%) translateY(8px);
@@ -394,6 +447,7 @@
 </div>
 <nav class="bottom">
   <button id="nav-train" class="active"><span class="ico">🏋️</span>Entrenar</button>
+  <button id="nav-cardio"><span class="ico">🏃</span>Ruta / KM</button>
   <button id="nav-progress"><span class="ico">📈</span>Progreso</button>
   <button id="nav-settings"><span class="ico">⚙️</span>Ajustes</button>
 </nav>
@@ -444,6 +498,73 @@
   var DRAFT_KEY = "phpower-draft-v1";
   var NOTES_KEY = "phpower-notes-v1";
   var LASTDAY_KEY = "phpower-lastday-v1";
+  var CARDIO_KEY = "phpower-cardio-v1";
+  var CLOUD_KEY = "phpower-cloud-v1";
+
+  var SEED_LOG = {
+    "Press de banca con barra": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 135, "reps": 5 }] },
+      { "date": "2026-07-29", "sets": [{ "weight": 145, "reps": 5 }, { "weight": 140, "reps": null }] },
+      { "date": "2026-08-11", "sets": [{ "weight": 155, "reps": 5 }, { "weight": 155, "reps": 5 }, { "weight": 155, "reps": 5 }, { "weight": 155, "reps": 5 }, { "weight": 155, "reps": 5 }] },
+      { "date": "2026-08-12", "sets": [{ "weight": 165, "reps": 5 }, { "weight": 165, "reps": 5 }, { "weight": 165, "reps": 5 }, { "weight": 165, "reps": 5 }, { "weight": 165, "reps": 5 }] },
+      { "date": "2026-08-25", "sets": [{ "weight": 185, "reps": 5 }, { "weight": 185, "reps": 5 }, { "weight": 185, "reps": 5 }, { "weight": 185, "reps": 5 }, { "weight": 185, "reps": null }] }
+    ]},
+    "Press inclinado con mancuernas": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 45, "reps": 8 }] },
+      { "date": "2026-07-29", "sets": [{ "weight": 50, "reps": 10 }] },
+      { "date": "2026-08-11", "sets": [{ "weight": 60, "reps": 6 }, { "weight": 60, "reps": 5 }, { "weight": 60, "reps": 5 }, { "weight": 60, "reps": 5 }] },
+      { "date": "2026-08-12", "sets": [{ "weight": 60, "reps": 5 }, { "weight": 60, "reps": 5 }, { "weight": 50, "reps": 6 }, { "weight": 50, "reps": 6 }] },
+      { "date": "2026-08-25", "sets": [{ "weight": 50, "reps": 7 }, { "weight": 50, "reps": 7 }, { "weight": 50, "reps": 5 }] }
+    ]},
+    "Press militar": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 35, "reps": 6 }] },
+      { "date": "2026-08-11", "sets": [{ "weight": 40, "reps": 8 }] },
+      { "date": "2026-08-25", "sets": [{ "weight": 45, "reps": 6 }] }
+    ]},
+    "Elevaciones laterales": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 10, "reps": 15 }] },
+      { "date": "2026-08-25", "sets": [{ "weight": 15, "reps": 15 }, { "weight": 15, "reps": 15 }, { "weight": 15, "reps": 15 }, { "weight": 15, "reps": 15 }] }
+    ]},
+    "Extensión de tríceps en polea": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 50, "reps": 12 }] },
+      { "date": "2026-08-25", "sets": [{ "weight": 60, "reps": 12 }, { "weight": 60, "reps": 12 }, { "weight": 60, "reps": 12 }] }
+    ]},
+    "Remo con barra": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 60, "reps": 8 }] },
+      { "date": "2026-08-01", "sets": [{ "weight": 70, "reps": 8 }, { "weight": 70, "reps": 8 }, { "weight": 70, "reps": 8 }, { "weight": 70, "reps": 8 }] }
+    ]},
+    "Jalón al pecho": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 100, "reps": 10 }] },
+      { "date": "2026-08-01", "sets": [{ "weight": 110, "reps": 10 }, { "weight": 110, "reps": 10 }, { "weight": 110, "reps": 10 }] },
+      { "date": "2026-08-06", "sets": [{ "weight": 120, "reps": 10 }, { "weight": 120, "reps": 10 }, { "weight": 120, "reps": 6 }] },
+      { "date": "2026-09-17", "sets": [{ "weight": 120, "reps": 10 }, { "weight": 120, "reps": 10 }, { "weight": 120, "reps": 10 }] }
+    ]},
+    "Remo sentado": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 80, "reps": 12 }] },
+      { "date": "2026-08-01", "sets": [{ "weight": 90, "reps": 12 }, { "weight": 90, "reps": 12 }, { "weight": 90, "reps": 12 }] },
+      { "date": "2026-08-06", "sets": [{ "weight": 100, "reps": 8 }, { "weight": 100, "reps": 10 }, { "weight": 100, "reps": 10 }] },
+      { "date": "2026-09-17", "sets": [{ "weight": 100, "reps": 12 }, { "weight": 100, "reps": 12 }, { "weight": 100, "reps": 12 }] }
+    ]},
+    "Curl con barra": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 50, "reps": 8 }] },
+      { "date": "2026-08-01", "sets": [{ "weight": 60, "reps": 6 }, { "weight": 60, "reps": 6 }, { "weight": 60, "reps": 5 }, { "weight": 60, "reps": 6 }] },
+      { "date": "2026-08-06", "sets": [{ "weight": 50, "reps": 8 }, { "weight": 50, "reps": 8 }, { "weight": 50, "reps": 8 }, { "weight": 50, "reps": 8 }] },
+      { "date": "2026-09-17", "sets": [{ "weight": 40, "reps": 8 }, { "weight": 40, "reps": 8 }, { "weight": 40, "reps": 8 }, { "weight": 40, "reps": 8 }] }
+    ]},
+    "Curl martillo": { "sessions": [
+      { "date": "2026-07-23", "sets": [{ "weight": 20, "reps": 12 }] },
+      { "date": "2026-08-01", "sets": [{ "weight": 30, "reps": 8 }, { "weight": 30, "reps": 9 }, { "weight": 30, "reps": 8 }] },
+      { "date": "2026-08-06", "sets": [{ "weight": 30, "reps": 6 }, { "weight": 30, "reps": 6 }, { "weight": 30, "reps": 8 }] },
+      { "date": "2026-09-17", "sets": [{ "weight": 30, "reps": 12 }, { "weight": 30, "reps": 12 }, { "weight": 30, "reps": 12 }] }
+    ]},
+    "Peso muerto": { "sessions": [
+      { "date": "2026-08-01", "sets": [{ "reps": 5 }] }
+    ]}
+  };
+
+  var SEED_CARDIO = [
+    { id: "c-20261012-3k", date: "2026-10-12", type: "Caminata", icon: "🚶", km: 3.0, mins: 35, note: "Rutica de caminata 3K" }
+  ];
 
   function loadJSON(key, fallback) {
     try { var v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
@@ -457,10 +578,23 @@
   }
 
   var routine = loadRoutine();
-  var log = loadJSON(STORE_KEY, {});
+  var log = loadJSON(STORE_KEY, null);
+  if (!log || Object.keys(log).length === 0) {
+    log = JSON.parse(JSON.stringify(SEED_LOG));
+    save(STORE_KEY, log);
+  }
+  var cardioLog = loadJSON(CARDIO_KEY, null);
+  if (!cardioLog || !cardioLog.length) {
+    cardioLog = JSON.parse(JSON.stringify(SEED_CARDIO));
+    save(CARDIO_KEY, cardioLog);
+  }
   var draft = loadJSON(DRAFT_KEY, {});
-  var notes = loadJSON(NOTES_KEY, {});
-  var lastDay = loadJSON(LASTDAY_KEY, null);
+  var notes = loadJSON(NOTES_KEY, {
+    "Curl con barra": "No pude con 60 poca energía hoy ",
+    "Press inclinado con mancuernas": "Agotado "
+  });
+  var lastDay = loadJSON(LASTDAY_KEY, { dayId: "d2", date: "2026-09-17" });
+  var cloudConf = loadJSON(CLOUD_KEY, { token: "", gistId: "" });
 
   function suggestedDayId() {
     if (!lastDay) return routine[0].id;
@@ -547,6 +681,7 @@
 
   function render() {
     if (activeView === "train") renderTrain();
+    else if (activeView === "cardio") renderCardio();
     else if (activeView === "progress") renderProgress();
     else renderSettings();
   }
@@ -746,9 +881,283 @@
     lastDay = { dayId: day.id, date: today };
     save(LASTDAY_KEY, lastDay);
     suggestedId = suggestedDayId();
-    if (savedAny) toast("Sesión guardada — " + day.short);
-    else toast("No había series registradas");
+    if (savedAny) {
+      autoSyncCloud();
+      toast("Sesión guardada — " + day.short);
+    } else {
+      toast("No había series registradas");
+    }
     render();
+  }
+
+  // ---- cardio / route & GPS tracker view ----
+  var CARDIO_TYPES = [
+    { type: "Caminata", icon: "🚶" },
+    { type: "Running", icon: "🏃" },
+    { type: "Ciclismo", icon: "🚴" },
+    { type: "Softbol", icon: "⚾" },
+    { type: "Basket", icon: "🏀" }
+  ];
+  var selectedCardioType = "Caminata";
+  var gpsWatchId = null;
+  var gpsTimerId = null;
+  var gpsActive = false;
+  var gpsStartTime = 0;
+  var gpsElapsedSec = 0;
+  var gpsTotalKm = 0;
+  var gpsLastCoords = null;
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function formatPace(km, mins) {
+    if (!km || km <= 0 || !mins || mins <= 0) return null;
+    var pace = mins / km;
+    var pMin = Math.floor(pace);
+    var pSec = Math.round((pace - pMin) * 60);
+    if (pSec === 60) { pMin++; pSec = 0; }
+    return pMin + ":" + (pSec < 10 ? "0" : "") + pSec + " /km";
+  }
+
+  function startGpsTracking() {
+    if (!navigator.geolocation) {
+      toast("Tu navegador no soporta GPS");
+      return;
+    }
+    gpsActive = true;
+    gpsStartTime = Date.now() - (gpsElapsedSec * 1000);
+    gpsLastCoords = null;
+
+    if (navigator.wakeLock && navigator.wakeLock.request) {
+      navigator.wakeLock.request("screen").catch(function () {});
+    }
+
+    gpsTimerId = setInterval(function () {
+      gpsElapsedSec = Math.floor((Date.now() - gpsStartTime) / 1000);
+      var elTime = document.getElementById("gps-time-val");
+      var elKm = document.getElementById("gps-km-val");
+      var elPace = document.getElementById("gps-pace-val");
+      if (elTime) elTime.textContent = fmtClock(gpsElapsedSec);
+      if (elKm) elKm.textContent = gpsTotalKm.toFixed(2);
+      if (elPace) {
+        var p = formatPace(gpsTotalKm, gpsElapsedSec / 60);
+        elPace.textContent = p ? p.replace(" /km", "") : "--:--";
+      }
+    }, 1000);
+
+    gpsWatchId = navigator.geolocation.watchPosition(function (pos) {
+      var crd = pos.coords;
+      if (crd.accuracy && crd.accuracy > 45) return; // ignorar lecturas imprecisas
+      if (gpsLastCoords) {
+        var d = haversineKm(gpsLastCoords.lat, gpsLastCoords.lon, crd.latitude, crd.longitude);
+        if (d >= 0.003 && d < 0.5) { // mínimo 3 metros para filtrar ruido estático
+          gpsTotalKm += d;
+        }
+      }
+      gpsLastCoords = { lat: crd.latitude, lon: crd.longitude };
+    }, function () {
+      toast("Activa el permiso de ubicación en tu celular");
+    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
+
+    render();
+    toast("📍 Rastreo GPS iniciado");
+  }
+
+  function stopGpsTracking() {
+    if (gpsWatchId != null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+    }
+    clearInterval(gpsTimerId);
+    gpsActive = false;
+
+    var finalKm = Math.round(gpsTotalKm * 100) / 100;
+    var finalMins = Math.max(1, Math.round(gpsElapsedSec / 60));
+
+    if (finalKm > 0.05) {
+      var iconObj = CARDIO_TYPES.filter(function (t) { return t.type === selectedCardioType; })[0] || CARDIO_TYPES[0];
+      cardioLog.push({
+        id: "c-" + Date.now(),
+        date: new Date().toISOString().slice(0, 10),
+        type: selectedCardioType,
+        icon: iconObj.icon,
+        km: finalKm,
+        mins: finalMins,
+        note: "Ruta medida con GPS del celular 📍"
+      });
+      save(CARDIO_KEY, cardioLog);
+      autoSyncCloud();
+      toast("¡Ruta GPS de " + finalKm + " km guardada!");
+    } else {
+      toast("GPS detenido (sin distancia suficiente)");
+    }
+
+    gpsElapsedSec = 0;
+    gpsTotalKm = 0;
+    gpsLastCoords = null;
+    render();
+  }
+
+  function renderCardio() {
+    var today = new Date().toISOString().slice(0, 10);
+    var totalKm = cardioLog.reduce(function (acc, r) { return acc + (parseFloat(r.km) || 0); }, 0);
+    var totalMins = cardioLog.reduce(function (acc, r) { return acc + (parseInt(r.mins, 10) || 0); }, 0);
+
+    var html = '<header class="top"><div class="kicker">Rutas, Cardio y Deporte</div><h1>MIS <span>KILÓMETROS</span></h1></header>';
+    html += '<main>';
+
+    // Resumen de kilómetros
+    html += '<div class="dash-summary">';
+    html += '<div class="stat-box"><div class="title">Distancia Total</div><div class="val" style="color:var(--accent);">' + totalKm.toFixed(1) + ' km</div><div class="sub">' + cardioLog.length + ' salidas registradas</div></div>';
+    html += '<div class="stat-box"><div class="title">Tiempo Activo</div><div class="val">' + totalMins + ' min</div><div class="sub">acumulados en ruta</div></div>';
+    html += '</div>';
+
+    // Tarjeta GPS en vivo del celular
+    html += '<section class="gps-card">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+      '<div style="font-weight:800;font-size:14.5px;">📍 GPS en Vivo (Sensor del Celular)</div>' +
+      '<span class="badge-tag ' + (gpsActive ? 'badge-good' : 'badge-warn') + '">' + (gpsActive ? 'Activo' : 'Listo') + '</span></div>';
+    html += '<div class="gps-stats">' +
+      '<div><div class="g-val num" id="gps-km-val">' + gpsTotalKm.toFixed(2) + '</div><div class="g-lbl">Kilómetros</div></div>' +
+      '<div><div class="g-val num" id="gps-time-val">' + fmtClock(gpsElapsedSec) + '</div><div class="g-lbl">Tiempo</div></div>' +
+      '<div><div class="g-val num" id="gps-pace-val">' + (formatPace(gpsTotalKm, gpsElapsedSec / 60) ? formatPace(gpsTotalKm, gpsElapsedSec / 60).replace(" /km", "") : "--:--") + '</div><div class="g-lbl">Min / KM</div></div>' +
+      '</div>';
+    if (!gpsActive) {
+      html += '<button class="finish" id="gps-start-btn" style="width:100%;margin:0;padding:12px;">▶ Iniciar Ruta con GPS en Vivo</button>';
+    } else {
+      html += '<button class="finish" id="gps-stop-btn" style="width:100%;margin:0;padding:12px;background:var(--good);">⏹ Terminar y Guardar Ruta GPS</button>';
+    }
+    html += '</section>';
+
+    // Registro manual rápido (ej: salí a caminar 3K)
+    html += '<section class="card" style="padding:14px 16px;">';
+    html += '<div style="font-weight:800;font-size:15px;margin-bottom:10px;">⚡ Anotar Salida o Ruta Manual</div>';
+
+    html += '<div class="type-chips">';
+    CARDIO_TYPES.forEach(function (t) {
+      html += '<button type="button" data-ctype="' + t.type + '" class="' + (selectedCardioType === t.type ? 'active' : '') + '">' +
+        t.icon + ' ' + t.type + '</button>';
+    });
+    html += '</div>';
+
+    html += '<div class="field-hint" style="margin-bottom:4px;">Atajo rápido de distancia</div>';
+    html += '<div class="quick-km">' +
+      '<button type="button" data-qkm="1">1K</button>' +
+      '<button type="button" data-qkm="3">3K</button>' +
+      '<button type="button" data-qkm="5">5K</button>' +
+      '<button type="button" data-qkm="10">10K</button>' +
+      '</div>';
+
+    html += '<div class="route-grid">' +
+      '<div class="route-field"><label>Distancia (KM)</label><input type="number" step="0.1" inputmode="decimal" id="r-km" placeholder="Ej. 3.0"></div>' +
+      '<div class="route-field"><label>Duración (Min)</label><input type="number" inputmode="numeric" id="r-mins" placeholder="Ej. 35"></div>' +
+      '</div>';
+
+    html += '<div class="route-grid">' +
+      '<div class="route-field"><label>Fecha</label><input type="date" id="r-date" value="' + today + '"></div>' +
+      '<div class="route-field"><label>Nota / Ruta</label><input type="text" id="r-note" placeholder="Ej. Rutica de 3k"></div>' +
+      '</div>';
+
+    html += '<button class="finish" id="save-route-btn" style="width:100%;margin:4px 0 0;padding:13px;">Guardar Salida</button>';
+    html += '</section>';
+
+    // Historial de salidas
+    html += '<div class="section-label">📋 Historial de Salidas y Rutas</div>';
+    if (cardioLog.length) {
+      var reversed = cardioLog.slice().reverse();
+      reversed.forEach(function (item) {
+        var pace = formatPace(item.km, item.mins);
+        html += '<div class="route-item">' +
+          '<div class="r-main">' +
+            '<h4>' + (item.icon || "🏃") + ' ' + escapeHtml(item.type) + '</h4>' +
+            '<div class="r-meta">' + escapeHtml(item.date) +
+              (item.mins ? ' &nbsp;·&nbsp; ' + item.mins + ' min' : '') +
+              (pace ? ' &nbsp;·&nbsp; Ritmo ' + pace : '') +
+            '</div>' +
+            (item.note ? '<div class="r-note">' + escapeHtml(item.note) + '</div>' : '') +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+            '<div class="r-badge">' + (item.km ? item.km + ' km' : 'Hecho') + '</div>' +
+            '<button class="del-route" data-id="' + escapeAttr(item.id) + '" style="background:none;border:none;color:var(--ink-dim);font-size:15px;cursor:pointer;padding:4px;">✕</button>' +
+          '</div>' +
+        '</div>';
+      });
+    } else {
+      html += '<div class="prog-empty">Aún no has registrado rutas.<br>Usa los botones de arriba para anotar tus caminatas o carreras.</div>';
+    }
+
+    html += '</main>';
+    app.innerHTML = html;
+    wireCardioEvents();
+  }
+
+  function wireCardioEvents() {
+    var startBtn = document.getElementById("gps-start-btn");
+    if (startBtn) startBtn.addEventListener("click", startGpsTracking);
+    var stopBtn = document.getElementById("gps-stop-btn");
+    if (stopBtn) stopBtn.addEventListener("click", stopGpsTracking);
+
+    app.querySelectorAll(".type-chips button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        selectedCardioType = btn.getAttribute("data-ctype");
+        app.querySelectorAll(".type-chips button").forEach(function (b) {
+          b.classList.toggle("active", b.getAttribute("data-ctype") === selectedCardioType);
+        });
+      });
+    });
+
+    app.querySelectorAll(".quick-km button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var kmInput = document.getElementById("r-km");
+        if (kmInput) kmInput.value = btn.getAttribute("data-qkm");
+      });
+    });
+
+    var saveBtn = document.getElementById("save-route-btn");
+    if (saveBtn) {
+      saveBtn.addEventListener("click", function () {
+        var kmVal = parseFloat(document.getElementById("r-km").value);
+        var minsVal = parseInt(document.getElementById("r-mins").value, 10);
+        var dateVal = document.getElementById("r-date").value || new Date().toISOString().slice(0, 10);
+        var noteVal = document.getElementById("r-note").value.trim();
+
+        if (isNaN(kmVal) && isNaN(minsVal)) {
+          toast("Ingresa los kilómetros o los minutos");
+          return;
+        }
+        var iconObj = CARDIO_TYPES.filter(function (t) { return t.type === selectedCardioType; })[0] || CARDIO_TYPES[0];
+        cardioLog.push({
+          id: "c-" + Date.now(),
+          date: dateVal,
+          type: selectedCardioType,
+          icon: iconObj.icon,
+          km: isNaN(kmVal) ? 0 : kmVal,
+          mins: isNaN(minsVal) ? null : minsVal,
+          note: noteVal
+        });
+        save(CARDIO_KEY, cardioLog);
+        autoSyncCloud();
+        toast("¡" + selectedCardioType + " guardada!");
+        renderCardio();
+      });
+    }
+
+    app.querySelectorAll(".del-route").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-id");
+        cardioLog = cardioLog.filter(function (r) { return r.id !== id; });
+        save(CARDIO_KEY, cardioLog);
+        renderCardio();
+      });
+    });
   }
 
   // ---- progress view ----
@@ -761,6 +1170,12 @@
         out.push(ex);
       });
     });
+    Object.keys(log).forEach(function (k) {
+      if (!seen[k]) {
+        seen[k] = true;
+        out.push({ n: k, sets: 3, label: "", target: null, rest: 60 });
+      }
+    });
     return out;
   }
 
@@ -769,6 +1184,27 @@
     var weaknesses = [];
     var totalSessions = 0;
     var allEx = allExercises();
+
+    // Analizar Cardio y Rutas (Caminata, Running, Ciclismo)
+    var totalKm = cardioLog.reduce(function (acc, r) { return acc + (parseFloat(r.km) || 0); }, 0);
+    if (totalKm > 0) {
+      var lastRoute = cardioLog[cardioLog.length - 1];
+      strengths.push({
+        name: "Cardio y Resistencia en Ruta (" + totalKm.toFixed(1) + " km)",
+        text: "Llevas " + cardioLog.length + (cardioLog.length === 1 ? " salida registrada" : " salidas registradas") +
+              " (última: " + lastRoute.type + " de " + lastRoute.km + " km el " + lastRoute.date + "). Excelente para resistencia y recuperación activa.",
+        tag: "Aeróbico",
+        type: "good"
+      });
+    } else {
+      weaknesses.push({
+        name: "Cardio / Salidas de Ruta",
+        text: "Aún no tienes caminatas, carreras o salidas en bici registradas.",
+        tip: "Usa la pestaña '🏃 Ruta / KM' para anotar tus caminatas de 3K o medir tu ruta con el GPS.",
+        tag: "Cardio",
+        type: "warn"
+      });
+    }
 
     allEx.forEach(function (ex) {
       var h = log[ex.n];
@@ -784,7 +1220,6 @@
       var allMax = s.map(function (ses) { return ses.sets.reduce(function (m, x) { return Math.max(m, x.weight || 0); }, 0); });
       var peakMax = Math.max.apply(null, allMax);
 
-      // Si ha progresado en peso o completado series sólidas
       if (s.length >= 2 && lastMax > firstMax) {
         var diff = lastMax - firstMax;
         strengths.push({
@@ -802,7 +1237,6 @@
         });
       }
 
-      // Detectar debilidades o estancamientos (si el último entreno bajó de peso o si hay notas de fatiga)
       if (s.length >= 2 && lastMax < peakMax && peakMax > 0) {
         var drop = peakMax - lastMax;
         weaknesses.push({
@@ -823,7 +1257,6 @@
       }
     });
 
-    // Detectar si no hay registros de piernas o peso muerto
     var squadLog = log["Sentadilla libre"] || log["Prensa"];
     if (!squadLog || !squadLog.sessions || squadLog.sessions.length === 0) {
       weaknesses.push({
@@ -838,7 +1271,8 @@
     return {
       strengths: strengths,
       weaknesses: weaknesses,
-      totalSessions: totalSessions
+      totalSessions: totalSessions,
+      totalKm: totalKm
     };
   }
 
@@ -850,10 +1284,11 @@
     var exs = allExercises();
     var trackedCount = exs.filter(function (e) { return log[e.n] && log[e.n].sessions && log[e.n].sessions.length; }).length;
 
-    // Resumen en cajas
-    html += '<div class="dash-summary">';
-    html += '<div class="stat-box"><div class="title">Ejercicios Activos</div><div class="val">' + trackedCount + '</div><div class="sub">con métricas guardadas</div></div>';
-    html += '<div class="stat-box"><div class="title">Rendimiento</div><div class="val" style="color:var(--good);">' + (analysis.strengths.length > 0 ? "En Alza 🚀" : "Base") + '</div><div class="sub">' + analysis.strengths.length + ' puntos fuertes</div></div>';
+    // Resumen en cajas (3 indicadores clave)
+    html += '<div class="dash-summary" style="grid-template-columns: 1fr 1fr 1fr;">';
+    html += '<div class="stat-box"><div class="title">Fuerza</div><div class="val">' + trackedCount + '</div><div class="sub">ejercicios</div></div>';
+    html += '<div class="stat-box"><div class="title">Ruta / Cardio</div><div class="val" style="color:var(--accent);">' + analysis.totalKm.toFixed(1) + 'K</div><div class="sub">' + cardioLog.length + ' salidas</div></div>';
+    html += '<div class="stat-box"><div class="title">Nivel</div><div class="val" style="color:var(--good);">' + (analysis.strengths.length > 0 ? "Alza 🚀" : "Base") + '</div><div class="sub">' + analysis.strengths.length + ' mejoras</div></div>';
     html += '</div>';
 
     // Sección de Fortalezas / Mejoras
@@ -886,7 +1321,7 @@
     }
 
     // Historial detallado con curvas
-    html += '<div class="section-label" style="margin-top:10px;">📈 Curvas de Progresión</div>';
+    html += '<div class="section-label" style="margin-top:10px;">📈 Curvas de Progresión (Fuerza)</div>';
     var any = false;
     exs.forEach(function (ex) {
       var h = log[ex.n];
@@ -946,10 +1381,115 @@
     ctx.fillStyle = accent; ctx.fill();
   }
 
+  // ---- Sincronización en la nube (GitHub Gist) ----
+  function getFullPayload() {
+    return {
+      routine: routine,
+      log: log,
+      cardioLog: cardioLog,
+      notes: notes,
+      lastDay: lastDay,
+      exportedAt: new Date().toISOString()
+    };
+  }
+
+  function autoSyncCloud() {
+    if (!cloudConf || !cloudConf.token) return;
+    pushToCloud(true);
+  }
+
+  function pushToCloud(silent) {
+    if (!cloudConf.token) {
+      if (!silent) toast("Ingresa tu token de cuenta en Ajustes");
+      return;
+    }
+    var payloadStr = JSON.stringify(getFullPayload(), null, 2);
+    var url = cloudConf.gistId ? "https://api.github.com/gists/" + cloudConf.gistId : "https://api.github.com/gists";
+    var method = cloudConf.gistId ? "PATCH" : "POST";
+
+    fetch(url, {
+      method: method,
+      headers: {
+        "Authorization": "token " + cloudConf.token,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        description: "PH Power - Sincronización de Entrenamiento y Rutas",
+        public: false,
+        files: {
+          "ph-power-sync.json": { content: payloadStr }
+        }
+      })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data && data.id) {
+        cloudConf.gistId = data.id;
+        save(CLOUD_KEY, cloudConf);
+        if (!silent) {
+          toast("☁️ Sincronizado en tu cuenta");
+          if (activeView === "settings") renderSettings();
+        }
+      } else if (!silent) {
+        toast("Error al sincronizar con la cuenta");
+      }
+    }).catch(function () {
+      if (!silent) toast("Sin conexión para sincronizar");
+    });
+  }
+
+  function pullFromCloud() {
+    if (!cloudConf.token || !cloudConf.gistId) {
+      toast("Configura tu Token y Gist ID primero");
+      return;
+    }
+    fetch("https://api.github.com/gists/" + cloudConf.gistId, {
+      headers: {
+        "Authorization": "token " + cloudConf.token,
+        "Accept": "application/vnd.github+json"
+      }
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data && data.files && data.files["ph-power-sync.json"]) {
+        var content = JSON.parse(data.files["ph-power-sync.json"].content);
+        if (content.routine) routine = content.routine;
+        if (content.log) log = content.log;
+        if (content.cardioLog) cardioLog = content.cardioLog;
+        if (content.notes) notes = content.notes;
+        if (content.lastDay) lastDay = content.lastDay;
+        saveRoutine();
+        save(STORE_KEY, log);
+        save(CARDIO_KEY, cardioLog);
+        save(NOTES_KEY, notes);
+        save(LASTDAY_KEY, lastDay);
+        toast("☁️ Datos descargados de tu cuenta");
+        renderSettings();
+      } else {
+        toast("No se encontró respaldo en ese Gist");
+      }
+    }).catch(function () {
+      toast("Error al descargar de la nube");
+    });
+  }
+
   // ---- settings view ----
   function renderSettings() {
     var html = '<header class="top"><div class="kicker">Personalizar</div><h1>AJUSTES</h1></header>';
     html += '<main>';
+
+    html += '<div class="section-label">☁️ Sincronización con Cuenta y Celular</div>';
+    html += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">' +
+      '<div style="font-size:12.5px;color:var(--ink-dim);line-height:1.4;">' +
+        'Conecta un <b>Token de GitHub (scope: gist)</b> para que cada serie y caminata de 3K se respalde automáticamente en tu cuenta entre tu celular y tu PC.' +
+      '</div>' +
+      '<div class="route-field"><label>Token de Cuenta (GitHub Personal Token)</label>' +
+        '<input type="password" id="cloud-token" placeholder="ghp_..." value="' + escapeAttr(cloudConf.token || "") + '"></div>' +
+      '<div class="route-field"><label>ID de Sincronización (Se genera solo al subir)</label>' +
+        '<input type="text" id="cloud-gist" placeholder="Automático al sincronizar" value="' + escapeAttr(cloudConf.gistId || "") + '"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+        '<button class="btn-outline" id="cloud-push-btn" style="border-color:var(--accent);color:var(--accent);">☁️ Subir a Nube</button>' +
+        '<button class="btn-outline" id="cloud-pull-btn">☁️ Traer de Nube</button>' +
+      '</div>' +
+      '<button class="btn-outline" id="share-native-btn">📲 Compartir / Enviar a mi Celular o Nube</button>' +
+      '</div>';
 
     routine.forEach(function (day) {
       html += '<div class="section-label">' + day.short + ' — ' + escapeHtml(day.name) + '</div>';
@@ -980,7 +1520,7 @@
       '💡 Funciona 100% offline en el gimnasio. En iPhone o Android puedes tocar el menú compartir/opciones de tu navegador y elegir <b>"Agregar a pantalla de inicio"</b> para abrirla sin barra de navegador.' +
       '</div>';
 
-    html += '<div class="section-label">Respaldo</div>';
+    html += '<div class="section-label">Respaldo Manual</div>';
     html += '<button class="btn-outline" id="export-btn">⬇ Exportar datos (JSON)</button>';
     html += '<label class="file-label"><span class="btn-outline" style="display:block;">⬆ Importar datos (JSON)</span>' +
       '<input type="file" id="import-file" accept="application/json"></label>';
@@ -993,6 +1533,56 @@
   function saveRoutine() { save(ROUTINE_KEY, routine); }
 
   function wireSettingsEvents() {
+    var tokInput = document.getElementById("cloud-token");
+    var gistInput = document.getElementById("cloud-gist");
+    if (tokInput) {
+      tokInput.addEventListener("change", function () {
+        cloudConf.token = tokInput.value.trim();
+        save(CLOUD_KEY, cloudConf);
+      });
+    }
+    if (gistInput) {
+      gistInput.addEventListener("change", function () {
+        cloudConf.gistId = gistInput.value.trim();
+        save(CLOUD_KEY, cloudConf);
+      });
+    }
+    var pushBtn = document.getElementById("cloud-push-btn");
+    if (pushBtn) {
+      pushBtn.addEventListener("click", function () {
+        if (tokInput) cloudConf.token = tokInput.value.trim();
+        if (gistInput) cloudConf.gistId = gistInput.value.trim();
+        save(CLOUD_KEY, cloudConf);
+        pushToCloud(false);
+      });
+    }
+    var pullBtn = document.getElementById("cloud-pull-btn");
+    if (pullBtn) {
+      pullBtn.addEventListener("click", function () {
+        if (tokInput) cloudConf.token = tokInput.value.trim();
+        if (gistInput) cloudConf.gistId = gistInput.value.trim();
+        save(CLOUD_KEY, cloudConf);
+        pullFromCloud();
+      });
+    }
+    var shareBtn = document.getElementById("share-native-btn");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", function () {
+        var payloadStr = JSON.stringify(getFullPayload(), null, 2);
+        var fileName = "ph-power-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+        if (navigator.share) {
+          var file = new File([payloadStr], fileName, { type: "application/json" });
+          var shareData = { title: "PH Power Respaldo", text: "Mis métricas de entrenamiento y rutas PH Power" };
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            shareData.files = [file];
+          }
+          navigator.share(shareData).catch(function () {});
+        } else {
+          document.getElementById("export-btn").click();
+        }
+      });
+    }
+
     app.querySelectorAll(".settings-day").forEach(function (block) {
       var dayId = block.getAttribute("data-day");
       var day = routine.filter(function (d) { return d.id === dayId; })[0];
@@ -1038,7 +1628,7 @@
     });
 
     document.getElementById("export-btn").addEventListener("click", function () {
-      var payload = { routine: routine, log: log, notes: notes, lastDay: lastDay, exportedAt: new Date().toISOString() };
+      var payload = getFullPayload();
       var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
@@ -1060,10 +1650,12 @@
           var data = JSON.parse(reader.result);
           if (data.routine) routine = data.routine;
           if (data.log) log = data.log;
+          if (data.cardioLog) cardioLog = data.cardioLog;
           if (data.notes) notes = data.notes;
           if (data.lastDay) lastDay = data.lastDay;
           saveRoutine();
           save(STORE_KEY, log);
+          save(CARDIO_KEY, cardioLog);
           save(NOTES_KEY, notes);
           save(LASTDAY_KEY, lastDay);
           suggestedId = suggestedDayId();
@@ -1110,6 +1702,9 @@
   document.getElementById("nav-train").addEventListener("click", function () {
     setView("train");
   });
+  document.getElementById("nav-cardio").addEventListener("click", function () {
+    setView("cardio");
+  });
   document.getElementById("nav-progress").addEventListener("click", function () {
     setView("progress");
   });
@@ -1119,8 +1714,9 @@
 
   function setView(v) {
     activeView = v;
-    ["train", "progress", "settings"].forEach(function (name) {
-      document.getElementById("nav-" + name).classList.toggle("active", name === v);
+    ["train", "cardio", "progress", "settings"].forEach(function (name) {
+      var el = document.getElementById("nav-" + name);
+      if (el) el.classList.toggle("active", name === v);
     });
     render();
   }

@@ -594,7 +594,9 @@
     "Press inclinado con mancuernas": "Agotado "
   });
   var lastDay = loadJSON(LASTDAY_KEY, { dayId: "d2", date: "2026-09-17" });
-  var cloudConf = loadJSON(CLOUD_KEY, { token: "", gistId: "" });
+  var DEFAULT_GIST_ID = "be6d5784184e547185fabd51ced2e98d";
+  var cloudConf = loadJSON(CLOUD_KEY, { token: "", gistId: DEFAULT_GIST_ID });
+  if (!cloudConf.gistId) cloudConf.gistId = DEFAULT_GIST_ID;
 
   function suggestedDayId() {
     if (!lastDay) return routine[0].id;
@@ -1438,15 +1440,16 @@
   }
 
   function pullFromCloud() {
-    if (!cloudConf.token || !cloudConf.gistId) {
-      toast("Configura tu Token y Gist ID primero");
+    var gid = cloudConf.gistId || DEFAULT_GIST_ID;
+    if (!gid) {
+      toast("Ingresa un ID de Sincronización");
       return;
     }
-    fetch("https://api.github.com/gists/" + cloudConf.gistId, {
-      headers: {
-        "Authorization": "token " + cloudConf.token,
-        "Accept": "application/vnd.github+json"
-      }
+    var hdrs = { "Accept": "application/vnd.github+json" };
+    if (cloudConf.token) hdrs["Authorization"] = "token " + cloudConf.token;
+
+    fetch("https://api.github.com/gists/" + gid, {
+      headers: hdrs
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (data && data.files && data.files["ph-power-sync.json"]) {
         var content = JSON.parse(data.files["ph-power-sync.json"].content);

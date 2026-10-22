@@ -319,6 +319,43 @@
   .badge-warn { background: var(--pr-soft); color: var(--pr); }
   .badge-bad { background: var(--bad-soft); color: var(--bad); }
 
+  /* Peso corporal */
+  .weight-card { padding: 14px 16px; }
+  .weight-card .w-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .weight-card .w-head h3 { margin: 0; font-size: 15.5px; font-weight: 800; }
+  .weight-card .w-now { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; }
+  .weight-card .w-now .big { font-size: 38px; font-weight: 800; color: var(--accent); text-shadow: var(--accent-glow); font-variant-numeric: tabular-nums; }
+  .weight-card .w-now .unit { font-size: 14px; font-weight: 700; color: var(--ink-dim); }
+  .weight-card .w-sub { font-size: 12.5px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  .weight-card .w-sub b.up { color: var(--pr); }
+  .weight-card .w-sub b.down { color: var(--accent); }
+  .w-goal { margin-top: 10px; }
+  .w-goal .bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 5px; }
+  .w-goal .bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--violet), var(--accent)); }
+  .weight-card canvas { display: block; width: 100%; height: 80px; margin: 12px 0 4px; }
+  .w-form { display: grid; grid-template-columns: 0.85fr 1.5fr auto; gap: 8px; margin-top: 12px; }
+  .w-form input[type="date"] { font-size: 15px; padding: 10px 8px; }
+  .w-form input {
+    width: 100%; min-width: 0; font: inherit; font-size: 16px; font-weight: 700;
+    color: var(--ink); background: var(--surface-2);
+    border: 1.5px solid transparent; border-radius: 12px; padding: 10px;
+  }
+  .w-form input:focus-visible { outline: none; border-color: var(--accent); }
+  .w-form button {
+    font: inherit; font-weight: 800; font-size: 14px; border: none; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0 16px;
+    min-height: 44px; box-shadow: var(--accent-glow);
+  }
+  .w-list { margin-top: 10px; }
+  .w-list .w-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 0; border-top: 1px solid var(--border); font-size: 13px; font-variant-numeric: tabular-nums;
+  }
+  .w-list .w-row span:first-child { color: var(--ink-dim); }
+  .w-list .w-row b { font-weight: 800; }
+  .w-list .w-row button { background: none; border: none; color: var(--ink-dim); font-size: 14px; cursor: pointer; padding: 4px 6px; }
+  .w-link { background: none; border: none; color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; padding: 4px 0; }
+
   .section-label {
     font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
     color: var(--ink-dim); padding: 10px 4px 0;
@@ -578,6 +615,9 @@
     cardioLog = JSON.parse(JSON.stringify(SEED_CARDIO));
     save(CARDIO_KEY, cardioLog);
   }
+  var WEIGHT_KEY = "phpower-peso-v1";
+  var weightLog = loadJSON(WEIGHT_KEY, { entries: [], goal: null });
+  if (!weightLog || !weightLog.entries) weightLog = { entries: [], goal: null };
   var draft = loadJSON(DRAFT_KEY, {});
   var notes = loadJSON(NOTES_KEY, {
     "Curl con barra": "No pude con 60 poca energía hoy ",
@@ -1394,6 +1434,8 @@
     html += '<div class="stat-box"><div class="title">Nivel</div><div class="val" style="color:var(--good);">' + (analysis.strengths.length > 0 ? "Alza 🚀" : "Base") + '</div><div class="sub">' + analysis.strengths.length + ' mejoras</div></div>';
     html += '</div>';
 
+    html += weightCardHtml();
+
     // Sección de Fortalezas / Mejoras
     html += '<div class="section-label">🏆 Tus Mayores Mejoras</div>';
     if (analysis.strengths.length) {
@@ -1448,6 +1490,107 @@
     html += '</main>';
     app.innerHTML = html;
     app.querySelectorAll("canvas[data-values]").forEach(drawSpark);
+    wireWeightEvents();
+  }
+
+  // ---- peso corporal ----
+  function todayLocal() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function sortedWeights() {
+    return weightLog.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+  }
+
+  function fmtLb(v) { return (Math.round(v * 10) / 10).toFixed(1); }
+
+  function weightCardHtml() {
+    var list = sortedWeights();
+    var html = '<section class="card weight-card">';
+    html += '<div class="w-head"><h3>⚖️ Peso Corporal</h3>' +
+      '<button class="w-link" id="w-goal-btn">' + (weightLog.goal ? 'Meta: ' + fmtLb(weightLog.goal) + ' lb' : '+ Poner meta') + '</button></div>';
+
+    if (list.length) {
+      var first = list[0], last = list[list.length - 1];
+      var diff = last.lb - first.lb;
+      html += '<div class="w-now"><span class="big">' + fmtLb(last.lb) + '</span><span class="unit">lb</span></div>';
+      html += '<div class="w-sub">' + (list.length > 1
+        ? '<b class="' + (diff > 0 ? 'up' : 'down') + '">' + (diff > 0 ? '+' : '') + fmtLb(diff) + ' lb</b> desde ' + escapeHtml(first.date) + ' (' + list.length + ' registros)'
+        : 'Primer registro: ' + escapeHtml(last.date)) + '</div>';
+
+      if (weightLog.goal) {
+        var total = Math.abs(weightLog.goal - first.lb);
+        var left = weightLog.goal - last.lb;
+        var movedRight = (weightLog.goal - first.lb) * (last.lb - first.lb) > 0;
+        var pct = total > 0 ? Math.max(0, Math.min(100, (movedRight ? Math.abs(last.lb - first.lb) : 0) / total * 100)) : 100;
+        html += '<div class="w-goal"><div class="w-sub">' + (Math.abs(left) < 0.05
+          ? '🎯 ¡Llegaste a tu meta!'
+          : 'Faltan <b>' + fmtLb(Math.abs(left)) + ' lb</b> para ' + (left < 0 ? 'bajar' : 'subir') + ' a ' + fmtLb(weightLog.goal) + ' lb') +
+          '</div><div class="bar"><span style="width:' + pct.toFixed(0) + '%"></span></div></div>';
+      }
+
+      if (list.length > 1) {
+        var pts = list.slice(-30).map(function (e) { return e.lb; });
+        html += '<canvas data-values="' + pts.join(",") + '" width="310" height="80"></canvas>';
+      }
+    } else {
+      html += '<div class="w-sub" style="margin-top:6px;">Anota tu peso para ver cómo cambia con el entrenamiento.</div>';
+    }
+
+    html += '<div class="w-form">' +
+      '<input type="number" step="0.1" inputmode="decimal" id="w-lb" placeholder="lb" aria-label="Peso en libras">' +
+      '<input type="date" id="w-date" value="' + todayLocal() + '">' +
+      '<button id="w-save">Guardar</button></div>';
+
+    if (list.length) {
+      html += '<div class="w-list">';
+      list.slice(-5).reverse().forEach(function (e) {
+        html += '<div class="w-row"><span>' + escapeHtml(e.date) + '</span><span><b>' + fmtLb(e.lb) + ' lb</b>' +
+          '<button class="w-del" data-date="' + escapeAttr(e.date) + '" aria-label="Borrar">✕</button></span></div>';
+      });
+      html += '</div>';
+    }
+    html += '</section>';
+    return html;
+  }
+
+  function saveWeights() {
+    save(WEIGHT_KEY, weightLog);
+    autoSyncCloud();
+  }
+
+  function wireWeightEvents() {
+    var saveBtn = document.getElementById("w-save");
+    if (!saveBtn) return;
+    saveBtn.addEventListener("click", function () {
+      var lb = parseFloat(String(document.getElementById("w-lb").value).replace(",", "."));
+      var date = document.getElementById("w-date").value || todayLocal();
+      if (isNaN(lb) || lb < 50 || lb > 700) { toast("Escribe tu peso en libras"); return; }
+      // un registro por día: si ya hay uno en esa fecha, se reemplaza
+      weightLog.entries = weightLog.entries.filter(function (e) { return e.date !== date; });
+      weightLog.entries.push({ date: date, lb: Math.round(lb * 10) / 10 });
+      saveWeights();
+      toast("Peso guardado: " + fmtLb(lb) + " lb");
+      renderProgress();
+    });
+    document.getElementById("w-goal-btn").addEventListener("click", function () {
+      var v = prompt("Peso meta en libras (déjalo vacío para quitar la meta):", weightLog.goal || "");
+      if (v === null) return;
+      var goal = parseFloat(String(v).replace(",", "."));
+      weightLog.goal = isNaN(goal) ? null : Math.round(goal * 10) / 10;
+      saveWeights();
+      renderProgress();
+    });
+    app.querySelectorAll(".w-del").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var date = btn.getAttribute("data-date");
+        if (!confirm("¿Borrar el peso del " + date + "?")) return;
+        weightLog.entries = weightLog.entries.filter(function (e) { return e.date !== date; });
+        saveWeights();
+        renderProgress();
+      });
+    });
   }
 
   function drawSpark(canvas) {
@@ -1490,6 +1633,7 @@
       routine: routine,
       log: log,
       cardioLog: cardioLog,
+      weightLog: weightLog,
       notes: notes,
       lastDay: lastDay,
       exportedAt: new Date().toISOString()
@@ -1557,6 +1701,7 @@
         if (content.routine) routine = content.routine;
         if (content.log) log = content.log;
         if (content.cardioLog) cardioLog = content.cardioLog;
+        if (content.weightLog) { weightLog = content.weightLog; save(WEIGHT_KEY, weightLog); }
         if (content.notes) notes = content.notes;
         if (content.lastDay) lastDay = content.lastDay;
         saveRoutine();
@@ -1755,6 +1900,7 @@
           if (data.routine) routine = data.routine;
           if (data.log) log = data.log;
           if (data.cardioLog) cardioLog = data.cardioLog;
+          if (data.weightLog) { weightLog = data.weightLog; save(WEIGHT_KEY, weightLog); }
           if (data.notes) notes = data.notes;
           if (data.lastDay) lastDay = data.lastDay;
           saveRoutine();

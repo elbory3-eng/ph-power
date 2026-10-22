@@ -1,4 +1,4 @@
-const CACHE_NAME = "phpower-v9";
+const CACHE_NAME = "phpower-v10";
 const ASSETS = [
   "./",
   "./index.html",

@@ -399,6 +399,7 @@
     background: var(--surface); border: 1.5px solid var(--accent); border-radius: var(--radius);
     padding: 14px 16px; box-shadow: var(--shadow);
   }
+  .gps-hint { font-size: 12px; color: var(--ink-dim); line-height: 1.4; margin: -4px 0 12px; text-align: center; }
   .gps-stats {
     display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center; margin: 10px 0 12px;
   }
@@ -916,13 +917,22 @@
     { type: "Basket", icon: "🏀" }
   ];
   var selectedCardioType = "Caminata";
+  var GPS_KEY = "phpower-gps-v1";
   var gpsWatchId = null;
   var gpsTimerId = null;
   var gpsActive = false;
   var gpsStartTime = 0;
   var gpsElapsedSec = 0;
   var gpsTotalKm = 0;
-  var gpsLastCoords = null;
+  // Punto de referencia: solo avanza cuando se suma un tramo, así los pasos cortos
+  // (lecturas cada 1 s caminando) se van acumulando en vez de perderse.
+  var gpsAnchor = null;
+  var wakeLockRef = null;
+
+  // Velocidad máxima creíble (m/s) para descartar saltos falsos del GPS
+  var GPS_MAX_SPEED = { "Ciclismo": 25 };
+  var GPS_MAX_ACCURACY = 50;   // metros: lecturas peores se ignoran
+  var GPS_MIN_STEP_M = 15;     // tramo mínimo para no sumar el temblor del GPS parado
 
   function haversineKm(lat1, lon1, lat2, lon2) {
     var R = 6371;
@@ -944,49 +954,95 @@
     return pMin + ":" + (pSec < 10 ? "0" : "") + pSec + " /km";
   }
 
+  // La ruta en curso se guarda en el celular para no perderla si el sistema
+  // cierra la app o se recarga la página a mitad del recorrido.
+  function saveGpsState() {
+    save(GPS_KEY, { start: gpsStartTime, km: gpsTotalKm, anchor: gpsAnchor, type: selectedCardioType });
+  }
+
+  function requestWakeLock() {
+    if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+    navigator.wakeLock.request("screen").then(function (lock) { wakeLockRef = lock; }).catch(function () {});
+  }
+
+  function onGpsPosition(pos) {
+    var crd = pos.coords;
+    if (crd.accuracy && crd.accuracy > GPS_MAX_ACCURACY) return; // lectura imprecisa
+    var now = pos.timestamp || Date.now();
+    var here = { lat: crd.latitude, lon: crd.longitude, t: now };
+    if (!gpsAnchor) { gpsAnchor = here; saveGpsState(); return; }
+
+    var meters = haversineKm(gpsAnchor.lat, gpsAnchor.lon, here.lat, here.lon) * 1000;
+    var minStep = Math.max(GPS_MIN_STEP_M, (crd.accuracy || 0) * 0.75);
+    if (meters < minStep) return; // todavía cerca del punto anterior: esperar a que se acumule
+
+    var secs = Math.max(1, (now - gpsAnchor.t) / 1000);
+    var maxSpeed = GPS_MAX_SPEED[selectedCardioType] || 12;
+    if (meters / secs > maxSpeed) return; // salto imposible: lectura falsa, se ignora
+
+    gpsTotalKm += meters / 1000;
+    gpsAnchor = here;
+    saveGpsState();
+  }
+
+  function updateGpsDisplay() {
+    gpsElapsedSec = Math.floor((Date.now() - gpsStartTime) / 1000);
+    var elTime = document.getElementById("gps-time-val");
+    var elKm = document.getElementById("gps-km-val");
+    var elPace = document.getElementById("gps-pace-val");
+    if (elTime) elTime.textContent = fmtClock(gpsElapsedSec);
+    if (elKm) elKm.textContent = gpsTotalKm.toFixed(2);
+    if (elPace) {
+      var p = formatPace(gpsTotalKm, gpsElapsedSec / 60);
+      elPace.textContent = p ? p.replace(" /km", "") : "--:--";
+    }
+  }
+
+  function beginGpsWatch() {
+    gpsActive = true;
+    requestWakeLock();
+    clearInterval(gpsTimerId);
+    gpsTimerId = setInterval(updateGpsDisplay, 1000);
+    gpsWatchId = navigator.geolocation.watchPosition(onGpsPosition, function (err) {
+      if (err && err.code === 1) toast("Activa el permiso de ubicación en tu celular");
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+  }
+
   function startGpsTracking() {
     if (!navigator.geolocation) {
       toast("Tu navegador no soporta GPS");
       return;
     }
-    gpsActive = true;
-    gpsStartTime = Date.now() - (gpsElapsedSec * 1000);
-    gpsLastCoords = null;
-
-    if (navigator.wakeLock && navigator.wakeLock.request) {
-      navigator.wakeLock.request("screen").catch(function () {});
-    }
-
-    gpsTimerId = setInterval(function () {
-      gpsElapsedSec = Math.floor((Date.now() - gpsStartTime) / 1000);
-      var elTime = document.getElementById("gps-time-val");
-      var elKm = document.getElementById("gps-km-val");
-      var elPace = document.getElementById("gps-pace-val");
-      if (elTime) elTime.textContent = fmtClock(gpsElapsedSec);
-      if (elKm) elKm.textContent = gpsTotalKm.toFixed(2);
-      if (elPace) {
-        var p = formatPace(gpsTotalKm, gpsElapsedSec / 60);
-        elPace.textContent = p ? p.replace(" /km", "") : "--:--";
-      }
-    }, 1000);
-
-    gpsWatchId = navigator.geolocation.watchPosition(function (pos) {
-      var crd = pos.coords;
-      if (crd.accuracy && crd.accuracy > 45) return; // ignorar lecturas imprecisas
-      if (gpsLastCoords) {
-        var d = haversineKm(gpsLastCoords.lat, gpsLastCoords.lon, crd.latitude, crd.longitude);
-        if (d >= 0.003 && d < 0.5) { // mínimo 3 metros para filtrar ruido estático
-          gpsTotalKm += d;
-        }
-      }
-      gpsLastCoords = { lat: crd.latitude, lon: crd.longitude };
-    }, function () {
-      toast("Activa el permiso de ubicación en tu celular");
-    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 });
-
+    gpsStartTime = Date.now();
+    gpsElapsedSec = 0;
+    gpsTotalKm = 0;
+    gpsAnchor = null;
+    saveGpsState();
+    beginGpsWatch();
     render();
-    toast("📍 Rastreo GPS iniciado");
+    toast("📍 Ruta iniciada — deja la app abierta");
   }
+
+  // Si la app se cerró con una ruta en curso, se retoma al abrirla de nuevo
+  function resumeGpsIfPending() {
+    var st = loadJSON(GPS_KEY, null);
+    if (!st || !st.start || !navigator.geolocation) return;
+    gpsStartTime = st.start;
+    gpsTotalKm = st.km || 0;
+    gpsAnchor = st.anchor || null;
+    if (st.type) selectedCardioType = st.type;
+    beginGpsWatch();
+    updateGpsDisplay();
+    setView("cardio");
+    toast("📍 Ruta en curso retomada");
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && gpsActive) {
+      requestWakeLock(); // el sistema suelta el bloqueo de pantalla al salir de la app
+      updateGpsDisplay();
+    }
+  });
 
   function stopGpsTracking() {
     if (gpsWatchId != null && navigator.geolocation) {
@@ -994,12 +1050,18 @@
       gpsWatchId = null;
     }
     clearInterval(gpsTimerId);
-    gpsActive = false;
+    if (wakeLockRef) { wakeLockRef.release().catch(function () {}); wakeLockRef = null; }
+    gpsElapsedSec = Math.floor((Date.now() - gpsStartTime) / 1000);
 
     var finalKm = Math.round(gpsTotalKm * 100) / 100;
     var finalMins = Math.max(1, Math.round(gpsElapsedSec / 60));
+    var keep = finalKm > 0.05 ||
+      confirm("El GPS casi no midió distancia (" + finalKm + " km en " + finalMins + " min).\n¿Guardar la salida igual? Luego puedes corregir los km con ✎.");
 
-    if (finalKm > 0.05) {
+    gpsActive = false;
+    localStorage.removeItem(GPS_KEY);
+
+    if (keep) {
       var iconObj = CARDIO_TYPES.filter(function (t) { return t.type === selectedCardioType; })[0] || CARDIO_TYPES[0];
       cardioLog.push({
         id: "c-" + Date.now(),
@@ -1014,12 +1076,12 @@
       autoSyncCloud();
       toast("¡Ruta GPS de " + finalKm + " km guardada!");
     } else {
-      toast("GPS detenido (sin distancia suficiente)");
+      toast("Ruta descartada");
     }
 
     gpsElapsedSec = 0;
     gpsTotalKm = 0;
-    gpsLastCoords = null;
+    gpsAnchor = null;
     render();
   }
 
@@ -1047,6 +1109,9 @@
       '<div><div class="g-val num" id="gps-time-val">' + fmtClock(gpsElapsedSec) + '</div><div class="g-lbl">Tiempo</div></div>' +
       '<div><div class="g-val num" id="gps-pace-val">' + (formatPace(gpsTotalKm, gpsElapsedSec / 60) ? formatPace(gpsTotalKm, gpsElapsedSec / 60).replace(" /km", "") : "--:--") + '</div><div class="g-lbl">Min / KM</div></div>' +
       '</div>';
+    html += '<div class="gps-hint">' + (gpsActive
+      ? 'Deja PH Power abierta en pantalla. Si cambias de app o apagas la pantalla, el celular pausa el GPS y ese tramo se mide en línea recta.'
+      : 'Para medir bien: deja la app abierta y la pantalla encendida durante la ruta.') + '</div>';
     if (!gpsActive) {
       html += '<button class="finish" id="gps-start-btn" style="width:100%;margin:0;padding:12px;">▶ Iniciar Ruta con GPS en Vivo</button>';
     } else {
@@ -1103,6 +1168,7 @@
           '</div>' +
           '<div style="display:flex;align-items:center;gap:10px;">' +
             '<div class="r-badge">' + (item.km ? item.km + ' km' : 'Hecho') + '</div>' +
+            '<button class="edit-route" data-id="' + escapeAttr(item.id) + '" aria-label="Corregir" style="background:none;border:none;color:var(--ink-dim);font-size:15px;cursor:pointer;padding:4px;">✎</button>' +
             '<button class="del-route" data-id="' + escapeAttr(item.id) + '" style="background:none;border:none;color:var(--ink-dim);font-size:15px;cursor:pointer;padding:4px;">✕</button>' +
           '</div>' +
         '</div>';
@@ -1166,6 +1232,26 @@
         renderCardio();
       });
     }
+
+    app.querySelectorAll(".edit-route").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-id");
+        var item = cardioLog.filter(function (r) { return r.id === id; })[0];
+        if (!item) return;
+        var km = prompt("Kilómetros de esta salida:", item.km || "");
+        if (km === null) return;
+        var mins = prompt("Minutos:", item.mins || "");
+        if (mins === null) return;
+        var kmVal = parseFloat(String(km).replace(",", "."));
+        var minsVal = parseInt(mins, 10);
+        item.km = isNaN(kmVal) ? 0 : Math.round(kmVal * 100) / 100;
+        item.mins = isNaN(minsVal) ? null : minsVal;
+        save(CARDIO_KEY, cardioLog);
+        autoSyncCloud();
+        toast("Salida corregida");
+        renderCardio();
+      });
+    });
 
     app.querySelectorAll(".del-route").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -1739,6 +1825,7 @@
     render();
   }
 
+  resumeGpsIfPending();
   render();
 })();
 </script>

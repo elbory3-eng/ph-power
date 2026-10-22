@@ -1,11 +1,33 @@
-const CACHE_NAME = "phpower-v8";
+const CACHE_NAME = "phpower-v9";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
-  "./icon.svg"
+  "./icon.svg",
+  "./img/ej/curl-barra.webp",
+  "./img/ej/curl-martillo.webp",
+  "./img/ej/dominadas.webp",
+  "./img/ej/elevaciones-laterales.webp",
+  "./img/ej/face-pull.webp",
+  "./img/ej/giro-ruso.webp",
+  "./img/ej/hip-thrust.webp",
+  "./img/ej/jalon-pecho.webp",
+  "./img/ej/landmine.webp",
+  "./img/ej/peso-muerto-rumano.webp",
+  "./img/ej/peso-muerto.webp",
+  "./img/ej/plancha.webp",
+  "./img/ej/prensa.webp",
+  "./img/ej/press-banca.webp",
+  "./img/ej/press-inclinado.webp",
+  "./img/ej/press-militar.webp",
+  "./img/ej/remo-barra.webp",
+  "./img/ej/remo-sentado.webp",
+  "./img/ej/sentadilla-salto.webp",
+  "./img/ej/sentadilla.webp",
+  "./img/ej/triceps-polea.webp",
+  "./img/ej/zancadas.webp"
 ];
 
 self.addEventListener("install", (event) => {

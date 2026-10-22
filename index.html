@@ -127,6 +127,13 @@
     display: flex; align-items: baseline; justify-content: space-between;
     gap: 10px; padding: 14px 16px 10px;
   }
+  .card-head.with-thumb { align-items: center; }
+  .card-head.with-thumb h2 { flex: 1; }
+  .ex-thumb {
+    flex: none; width: 64px; height: 64px; border-radius: 16px;
+    object-fit: cover; background: var(--surface-2);
+    border: 1.5px solid var(--border);
+  }
   .card-head h2 {
     margin: 0; font-size: 17px; font-weight: 750; text-wrap: balance;
     letter-spacing: -.005em;
@@ -675,6 +682,29 @@
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  // Foto de cada ejercicio (catálogo free-exercise-db, dominio público). Se busca por
+  // palabra clave para que siga funcionando si el ejercicio se renombra en Ajustes.
+  var EX_IMAGES = [
+    [/inclinad/, "press-inclinado"], [/banca/, "press-banca"],
+    [/salto/, "sentadilla-salto"], [/militar|hombro/, "press-militar"],
+    [/rus[ao]|rotacion/, "giro-ruso"], [/face pull|manguito/, "face-pull"],
+    [/tricep/, "triceps-polea"], [/rumano/, "peso-muerto-rumano"],
+    [/peso muerto/, "peso-muerto"], [/dominada/, "dominadas"],
+    [/remo sentado|remo en polea/, "remo-sentado"], [/remo/, "remo-barra"],
+    [/jalon/, "jalon-pecho"], [/landmine|woodchop|lenador/, "landmine"],
+    [/martillo/, "curl-martillo"], [/curl/, "curl-barra"],
+    [/zancada|desplante/, "zancadas"], [/hip thrust|puente de gluteo/, "hip-thrust"],
+    [/prensa/, "prensa"], [/lateral/, "elevaciones-laterales"],
+    [/plancha/, "plancha"], [/sentadilla/, "sentadilla"]
+  ];
+  function exerciseImage(name) {
+    var n = String(name).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    for (var i = 0; i < EX_IMAGES.length; i++) {
+      if (EX_IMAGES[i][0].test(n)) return "img/ej/" + EX_IMAGES[i][1] + ".webp";
+    }
+    return null;
+  }
+
   function renderTrain() {
     var day = routine.filter(function (d) { return d.id === activeDay; })[0];
     if (!day) { day = routine[0]; activeDay = day.id; }
@@ -701,7 +731,10 @@
 
       var doneCount = dr.sets.filter(function (s) { return s && s.done; }).length;
       html += '<section class="card" data-ex="' + escapeAttr(ex.n) + '">';
-      html += '<div class="card-head"><h2>' + escapeHtml(ex.n) + '</h2><span class="scheme num">' + escapeHtml(ex.label) + '</span></div>';
+      var img = exerciseImage(ex.n);
+      html += '<div class="card-head' + (img ? ' with-thumb' : '') + '">' +
+        (img ? '<img class="ex-thumb" src="' + img + '" alt="" loading="lazy" width="64" height="64">' : '') +
+        '<h2>' + escapeHtml(ex.n) + '</h2><span class="scheme num">' + escapeHtml(ex.label) + '</span></div>';
       html += '<div class="rest-chip">Descanso ' + ex.rest + 's &nbsp;·&nbsp; <span class="counter' +
         (doneCount === ex.sets ? ' full' : '') + '">' + doneCount + '/' + ex.sets + ' series</span></div>';
 

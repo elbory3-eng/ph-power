@@ -275,6 +275,88 @@
   }
   nav.bottom button .ico { font-size: 19px; }
   nav.bottom button.active { background: var(--accent); color: var(--accent-ink); box-shadow: var(--accent-glow); }
+  @media (max-width: 430px) {
+    nav.bottom { width: calc(100% - 12px); gap: 2px; padding: 5px; }
+    nav.bottom button { font-size: 9px; padding: 3px 1px; }
+    nav.bottom button .ico { font-size: 17px; }
+  }
+
+  /* Biblioteca de dietas (archivos guardados offline en IndexedDB) */
+  .diet-upload {
+    padding: 18px 16px; text-align: center; border: 1.5px dashed var(--accent);
+  }
+  .diet-upload .diet-icon { font-size: 38px; margin-bottom: 6px; }
+  .diet-upload h3 { margin: 0 0 5px; font-size: 18px; }
+  .diet-upload p { margin: 0 0 14px; color: var(--ink-dim); font-size: 12.5px; line-height: 1.45; }
+  .diet-upload-btn {
+    display: inline-block; background: var(--accent); color: var(--accent-ink);
+    padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 800;
+    cursor: pointer; box-shadow: var(--accent-glow);
+  }
+  .diet-upload-btn input { display: none; }
+  .diet-list { display: flex; flex-direction: column; gap: 10px; }
+  .diet-item { padding: 13px 14px; display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: center; }
+  .diet-file-icon {
+    width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px;
+    background: var(--surface-2); font-size: 22px;
+  }
+  .diet-info { min-width: 0; }
+  .diet-info h3 { margin: 0 0 3px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .diet-meta { font-size: 11.5px; color: var(--ink-dim); }
+  .diet-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr auto; gap: 7px; }
+  .diet-actions button {
+    font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; min-height: 38px;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink);
+  }
+  .diet-actions .diet-open { border-color: var(--accent); color: var(--accent); }
+  .diet-actions .diet-delete { color: var(--bad); padding: 0 13px; }
+  .diet-empty { color: var(--ink-dim); font-size: 13px; text-align: center; padding: 20px 14px; line-height: 1.5; }
+
+  /* Catálogo e inventario de productos */
+  .product-form { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .product-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .product-field.full { grid-column: 1 / -1; }
+  .product-field label {
+    display: block; margin-bottom: 4px; color: var(--ink-dim); font-size: 10px;
+    font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .product-field input, .product-field select, .product-field textarea {
+    width: 100%; min-width: 0; padding: 10px; border: 1.5px solid transparent; border-radius: 10px;
+    background: var(--surface-2); color: var(--ink); font: inherit; font-size: 14px;
+  }
+  .product-field textarea { resize: vertical; min-height: 64px; }
+  .product-field input:focus-visible, .product-field select:focus-visible, .product-field textarea:focus-visible {
+    outline: none; border-color: var(--accent);
+  }
+  .product-photo-label {
+    display: block; border: 1.5px dashed var(--border); border-radius: 11px; padding: 10px;
+    color: var(--ink-dim); font-size: 12.5px; text-align: center; cursor: pointer;
+  }
+  .product-photo-label input { display: none; }
+  .product-save {
+    min-height: 44px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+    box-shadow: var(--accent-glow); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+  }
+  .product-list { display: flex; flex-direction: column; gap: 10px; }
+  .product-item { padding: 12px; display: grid; grid-template-columns: 74px 1fr; gap: 11px; }
+  .product-image {
+    width: 74px; height: 74px; border-radius: 13px; background: var(--surface-2);
+    object-fit: cover; display: grid; place-items: center; font-size: 30px;
+  }
+  .product-info { min-width: 0; }
+  .product-info h3 { margin: 0 0 3px; font-size: 15px; }
+  .product-category { color: var(--ink-dim); font-size: 11px; }
+  .product-price { margin-top: 5px; color: var(--accent); font-size: 20px; font-weight: 800; }
+  .product-stock { font-size: 11.5px; color: var(--ink-dim); }
+  .product-stock.low { color: var(--bad); font-weight: 800; }
+  .product-description { grid-column: 1 / -1; margin: -2px 2px 0; color: var(--ink-dim); font-size: 12px; line-height: 1.4; }
+  .product-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr auto; gap: 7px; }
+  .product-actions button {
+    min-height: 38px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2);
+    color: var(--ink); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+  }
+  .product-actions .product-sell { border-color: var(--accent); color: var(--accent); }
+  .product-actions .product-delete { color: var(--bad); padding: 0 13px; }
 
   /* Progress view */
   .prog-item {
@@ -475,6 +557,8 @@
 <nav class="bottom">
   <button id="nav-train" class="active"><span class="ico">🏋️</span>Entrenar</button>
   <button id="nav-cardio"><span class="ico">🏃</span>Ruta / KM</button>
+  <button id="nav-diets"><span class="ico">🥗</span>Dietas</button>
+  <button id="nav-products"><span class="ico">🛍️</span>Productos</button>
   <button id="nav-progress"><span class="ico">📈</span>Progreso</button>
   <button id="nav-settings"><span class="ico">⚙️</span>Ajustes</button>
 </nav>
@@ -714,6 +798,8 @@
   function render() {
     if (activeView === "train") renderTrain();
     else if (activeView === "cardio") renderCardio();
+    else if (activeView === "diets") renderDiets();
+    else if (activeView === "products") renderProducts();
     else if (activeView === "progress") renderProgress();
     else renderSettings();
   }
@@ -721,6 +807,286 @@
   function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
   function escapeHtml(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // ---- biblioteca de dietas: archivos privados y disponibles offline ----
+  var DIET_DB = "phpower-diets-v1";
+  var DIET_STORE = "files";
+  var dietCache = {};
+
+  function openDietDb() {
+    return new Promise(function (resolve, reject) {
+      if (!window.indexedDB) { reject(new Error("IndexedDB no disponible")); return; }
+      var request = indexedDB.open(DIET_DB, 1);
+      request.onupgradeneeded = function () {
+        var db = request.result;
+        if (!db.objectStoreNames.contains(DIET_STORE)) {
+          db.createObjectStore(DIET_STORE, { keyPath: "id", autoIncrement: true });
+        }
+      };
+      request.onsuccess = function () { resolve(request.result); };
+      request.onerror = function () { reject(request.error); };
+    });
+  }
+
+  function dietDbRequest(mode, operation) {
+    return openDietDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(DIET_STORE, mode);
+        var request = operation(tx.objectStore(DIET_STORE));
+        request.onsuccess = function () { resolve(request.result); };
+        request.onerror = function () { reject(request.error); };
+        tx.oncomplete = function () { db.close(); };
+      });
+    });
+  }
+
+  function getDiets() { return dietDbRequest("readonly", function (store) { return store.getAll(); }); }
+  function getDiet(id) { return dietDbRequest("readonly", function (store) { return store.get(id); }); }
+  function deleteDiet(id) { return dietDbRequest("readwrite", function (store) { return store.delete(id); }); }
+  function addDiet(file) {
+    return dietDbRequest("readwrite", function (store) {
+      return store.add({ name: file.name, type: file.type || "application/octet-stream", size: file.size,
+        addedAt: new Date().toISOString(), blob: file });
+    });
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / 1048576).toFixed(1) + " MB";
+  }
+
+  function dietFileIcon(type) {
+    if (type === "application/pdf") return "📕";
+    if (type && type.indexOf("image/") === 0) return "🖼️";
+    return "📄";
+  }
+
+  function renderDiets() {
+    var html = '<header class="top"><div class="kicker">Plan de alimentación</div><h1>MIS <span>DIETAS</span></h1></header>';
+    html += '<main><section class="card diet-upload"><div class="diet-icon">🥗</div>' +
+      '<h3>Sube tu dieta</h3><p>Guarda planes en PDF o imagen para consultarlos aun sin internet.</p>' +
+      '<label class="diet-upload-btn">＋ Agregar archivo<input id="diet-file" type="file" accept="application/pdf,image/*,.doc,.docx" multiple></label></section>' +
+      '<div class="section-label">Archivos guardados</div><div id="diet-list" class="diet-list"><div class="card diet-empty">Cargando tus dietas…</div></div></main>';
+    app.innerHTML = html;
+    var input = document.getElementById("diet-file");
+    input.addEventListener("change", function () {
+      var files = Array.prototype.slice.call(input.files || []);
+      if (!files.length) return;
+      var maxBytes = 20 * 1024 * 1024;
+      var valid = files.filter(function (file) {
+        if (file.size > maxBytes) { toast(file.name + " supera 20 MB"); return false; }
+        return true;
+      });
+      Promise.all(valid.map(addDiet)).then(function () {
+        toast(valid.length === 1 ? "Dieta guardada" : "Dietas guardadas");
+        loadDietList();
+      }).catch(function () { toast("No se pudo guardar el archivo"); });
+      input.value = "";
+    });
+    loadDietList();
+  }
+
+  function loadDietList() {
+    var list = document.getElementById("diet-list");
+    if (!list) return;
+    getDiets().then(function (items) {
+      items.sort(function (a, b) { return String(b.addedAt).localeCompare(String(a.addedAt)); });
+      dietCache = {};
+      items.forEach(function (item) { dietCache[item.id] = item; });
+      if (!items.length) {
+        list.innerHTML = '<div class="card diet-empty">Todavía no has subido ninguna dieta.<br>Agrega un PDF o una foto de tu plan.</div>';
+        return;
+      }
+      list.innerHTML = items.map(function (item) {
+        var date = new Date(item.addedAt).toLocaleDateString("es-DO", { day: "numeric", month: "short", year: "numeric" });
+        return '<article class="card diet-item"><div class="diet-file-icon">' + dietFileIcon(item.type) + '</div>' +
+          '<div class="diet-info"><h3>' + escapeHtml(item.name) + '</h3><div class="diet-meta">' + date + ' · ' + formatBytes(item.size) + '</div></div>' +
+          '<div class="diet-actions"><button class="diet-open" data-id="' + item.id + '">Abrir</button>' +
+          '<button class="diet-share" data-id="' + item.id + '">Compartir</button>' +
+          '<button class="diet-delete" data-id="' + item.id + '" aria-label="Eliminar">✕</button></div></article>';
+      }).join("");
+      wireDietEvents();
+    }).catch(function () {
+      list.innerHTML = '<div class="card diet-empty">No se pudo abrir el almacenamiento de dietas.</div>';
+    });
+  }
+
+  function wireDietEvents() {
+    app.querySelectorAll(".diet-open").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var item = dietCache[Number(button.getAttribute("data-id"))];
+        if (!item) { toast("No se encontró el archivo"); return; }
+        var url = URL.createObjectURL(item.blob);
+        window.open(url, "_blank");
+        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      });
+    });
+    app.querySelectorAll(".diet-share").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var item = dietCache[Number(button.getAttribute("data-id"))];
+        if (!item) { toast("No se encontró el archivo"); return; }
+        var file = new File([item.blob], item.name, { type: item.type });
+        if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+          navigator.share({ title: "Mi dieta", files: [file] }).catch(function () {});
+        } else {
+          var url = URL.createObjectURL(item.blob), a = document.createElement("a");
+          a.href = url; a.download = item.name; a.click(); URL.revokeObjectURL(url);
+          toast("Archivo descargado");
+        }
+      });
+    });
+    app.querySelectorAll(".diet-delete").forEach(function (button) {
+      button.addEventListener("click", function () {
+        if (!confirm("¿Eliminar esta dieta del dispositivo?")) return;
+        deleteDiet(Number(button.getAttribute("data-id"))).then(function () {
+          toast("Dieta eliminada"); loadDietList();
+        });
+      });
+    });
+  }
+
+  // ---- catálogo e inventario de suplementos/productos ----
+  var PRODUCT_DB = "phpower-products-v1";
+  var PRODUCT_STORE = "products";
+  var productCache = {};
+
+  function openProductDb() {
+    return new Promise(function (resolve, reject) {
+      if (!window.indexedDB) { reject(new Error("IndexedDB no disponible")); return; }
+      var request = indexedDB.open(PRODUCT_DB, 1);
+      request.onupgradeneeded = function () {
+        var db = request.result;
+        if (!db.objectStoreNames.contains(PRODUCT_STORE)) {
+          db.createObjectStore(PRODUCT_STORE, { keyPath: "id", autoIncrement: true });
+        }
+      };
+      request.onsuccess = function () { resolve(request.result); };
+      request.onerror = function () { reject(request.error); };
+    });
+  }
+
+  function productDbRequest(mode, operation) {
+    return openProductDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(PRODUCT_STORE, mode);
+        var request = operation(tx.objectStore(PRODUCT_STORE));
+        request.onsuccess = function () { resolve(request.result); };
+        request.onerror = function () { reject(request.error); };
+        tx.oncomplete = function () { db.close(); };
+      });
+    });
+  }
+
+  function getProducts() { return productDbRequest("readonly", function (store) { return store.getAll(); }); }
+  function saveProduct(product) {
+    return productDbRequest("readwrite", function (store) { return product.id ? store.put(product) : store.add(product); });
+  }
+  function removeProduct(id) { return productDbRequest("readwrite", function (store) { return store.delete(id); }); }
+
+  function renderProducts() {
+    var html = '<header class="top"><div class="kicker">Catálogo e inventario</div><h1>MIS <span>PRODUCTOS</span></h1></header>';
+    html += '<main><div class="section-label">Agregar producto o suplemento</div>' +
+      '<section class="card product-form"><input type="hidden" id="product-id">' +
+      '<div class="product-form-grid">' +
+      '<div class="product-field full"><label>Nombre</label><input id="product-name" maxlength="80" placeholder="Ej. Proteína Whey 2 lb"></div>' +
+      '<div class="product-field"><label>Categoría</label><select id="product-category"><option>Suplementos</option><option>Vitaminas</option><option>Accesorios</option><option>Bebidas</option><option>Ropa</option><option>Otro</option></select></div>' +
+      '<div class="product-field"><label>Precio (RD$)</label><input id="product-price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>' +
+      '<div class="product-field"><label>Existencia</label><input id="product-stock" type="number" min="0" step="1" inputmode="numeric" value="1"></div>' +
+      '<div class="product-field"><label>Costo opcional</label><input id="product-cost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div>' +
+      '<div class="product-field full"><label>Descripción</label><textarea id="product-description" maxlength="300" placeholder="Sabor, tamaño, beneficios o detalles"></textarea></div></div>' +
+      '<label class="product-photo-label">📷 Agregar foto del producto<input id="product-photo" type="file" accept="image/*"></label>' +
+      '<button class="product-save" id="product-save">Guardar producto</button></section>' +
+      '<div class="section-label">Productos guardados</div><div class="product-list" id="product-list"><div class="card diet-empty">Cargando productos…</div></div></main>';
+    app.innerHTML = html;
+    document.getElementById("product-save").addEventListener("click", handleProductSave);
+    loadProductList();
+  }
+
+  function handleProductSave() {
+    var name = document.getElementById("product-name").value.trim();
+    var price = parseFloat(document.getElementById("product-price").value);
+    var stock = parseInt(document.getElementById("product-stock").value, 10);
+    if (!name) { toast("Escribe el nombre del producto"); return; }
+    if (isNaN(price) || price < 0) { toast("Escribe un precio válido"); return; }
+    if (isNaN(stock) || stock < 0) { toast("Escribe una existencia válida"); return; }
+    var id = Number(document.getElementById("product-id").value) || null;
+    var previous = id ? productCache[id] : null;
+    var photoInput = document.getElementById("product-photo");
+    var photo = photoInput.files[0] || (previous && previous.photo) || null;
+    if (photo && photo.size > 5 * 1024 * 1024) { toast("La foto supera 5 MB"); return; }
+    var costValue = parseFloat(document.getElementById("product-cost").value);
+    var product = {
+      name: name, category: document.getElementById("product-category").value, price: price,
+      stock: stock, cost: isNaN(costValue) ? null : costValue,
+      description: document.getElementById("product-description").value.trim(), photo: photo,
+      createdAt: previous ? previous.createdAt : new Date().toISOString(), updatedAt: new Date().toISOString()
+    };
+    if (id) product.id = id;
+    saveProduct(product).then(function () {
+      toast(id ? "Producto actualizado" : "Producto agregado"); renderProducts();
+    }).catch(function () { toast("No se pudo guardar el producto"); });
+  }
+
+  function formatMoney(value) {
+    return "RD$ " + Number(value || 0).toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function loadProductList() {
+    var list = document.getElementById("product-list");
+    if (!list) return;
+    getProducts().then(function (items) {
+      items.sort(function (a, b) { return String(b.updatedAt).localeCompare(String(a.updatedAt)); });
+      productCache = {};
+      items.forEach(function (item) { productCache[item.id] = item; });
+      if (!items.length) {
+        list.innerHTML = '<div class="card diet-empty">Todavía no tienes productos.<br>Agrega tu primer suplemento o artículo.</div>';
+        return;
+      }
+      list.innerHTML = items.map(function (item) {
+        var image = item.photo ? '<img class="product-image" src="' + URL.createObjectURL(item.photo) + '" alt="">' : '<div class="product-image">📦</div>';
+        var stockClass = item.stock <= 2 ? " low" : "";
+        return '<article class="card product-item">' + image + '<div class="product-info"><h3>' + escapeHtml(item.name) + '</h3>' +
+          '<div class="product-category">' + escapeHtml(item.category) + '</div><div class="product-price">' + formatMoney(item.price) + '</div>' +
+          '<div class="product-stock' + stockClass + '">' + item.stock + ' disponible' + (item.stock === 1 ? '' : 's') + '</div></div>' +
+          (item.description ? '<div class="product-description">' + escapeHtml(item.description) + '</div>' : '') +
+          '<div class="product-actions"><button class="product-sell" data-id="' + item.id + '"' + (item.stock < 1 ? ' disabled' : '') + '>Vender 1</button>' +
+          '<button class="product-edit" data-id="' + item.id + '">Editar</button><button class="product-delete" data-id="' + item.id + '">✕</button></div></article>';
+      }).join("");
+      wireProductEvents();
+    }).catch(function () { list.innerHTML = '<div class="card diet-empty">No se pudo abrir el inventario.</div>'; });
+  }
+
+  function wireProductEvents() {
+    app.querySelectorAll(".product-sell").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var item = productCache[Number(button.getAttribute("data-id"))];
+        if (!item || item.stock < 1) return;
+        item.stock -= 1; item.updatedAt = new Date().toISOString();
+        saveProduct(item).then(function () { toast("Venta registrada · quedan " + item.stock); loadProductList(); });
+      });
+    });
+    app.querySelectorAll(".product-edit").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var item = productCache[Number(button.getAttribute("data-id"))];
+        document.getElementById("product-id").value = item.id;
+        document.getElementById("product-name").value = item.name;
+        document.getElementById("product-category").value = item.category;
+        document.getElementById("product-price").value = item.price;
+        document.getElementById("product-stock").value = item.stock;
+        document.getElementById("product-cost").value = item.cost == null ? "" : item.cost;
+        document.getElementById("product-description").value = item.description || "";
+        document.getElementById("product-save").textContent = "Actualizar producto";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+    app.querySelectorAll(".product-delete").forEach(function (button) {
+      button.addEventListener("click", function () {
+        if (!confirm("¿Eliminar este producto del inventario?")) return;
+        removeProduct(Number(button.getAttribute("data-id"))).then(function () { toast("Producto eliminado"); loadProductList(); });
+      });
+    });
   }
 
   // Foto de cada ejercicio (catálogo free-exercise-db, dominio público). Se busca por
@@ -1764,6 +2130,7 @@
     html += '<button class="btn-outline btn-danger" id="restore-btn">Restaurar rutina original</button>';
 
     html += '<div class="section-label">Aplicación de Celular</div>';
+    html += '<a class="btn-outline" href="./coach.html" style="display:block;text-align:center;text-decoration:none;border-color:var(--violet);color:var(--pr);margin-bottom:8px;">🧑‍🏫 Abrir Panel del Entrenador</a>';
     html += '<button class="btn-outline" id="install-btn" style="display:' + (deferredInstallPrompt ? 'block' : 'none') + ';">📲 Instalar en pantalla de inicio</button>';
     html += '<div style="font-size:12px;color:var(--ink-dim);padding:6px 4px;line-height:1.4;">' +
       '💡 Funciona 100% offline en el gimnasio. En iPhone o Android puedes tocar el menú compartir/opciones de tu navegador y elegir <b>"Agregar a pantalla de inicio"</b> para abrirla sin barra de navegador.' +
@@ -1955,6 +2322,12 @@
   document.getElementById("nav-cardio").addEventListener("click", function () {
     setView("cardio");
   });
+  document.getElementById("nav-diets").addEventListener("click", function () {
+    setView("diets");
+  });
+  document.getElementById("nav-products").addEventListener("click", function () {
+    setView("products");
+  });
   document.getElementById("nav-progress").addEventListener("click", function () {
     setView("progress");
   });
@@ -1964,7 +2337,7 @@
 
   function setView(v) {
     activeView = v;
-    ["train", "cardio", "progress", "settings"].forEach(function (name) {
+    ["train", "cardio", "diets", "products", "progress", "settings"].forEach(function (name) {
       var el = document.getElementById("nav-" + name);
       if (el) el.classList.toggle("active", name === v);
     });
